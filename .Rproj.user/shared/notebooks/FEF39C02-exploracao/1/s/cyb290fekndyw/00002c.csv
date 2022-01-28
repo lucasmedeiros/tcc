@@ -1,0 +1,8 @@
+"0",""
+"0",""
+"0","temperatura_local_e_externa = full_join(th_latec_formatado,"
+"0","                                        dados_temperatura_cg_por_hora,"
+"0","                                        by = c(""data"", ""hora"", ""mes"")) %>%"
+"0","  filter(!is.na(temperatura_media) & !is.na(temperatura))"
+"0",""
+"0","temperatura_local_e_externa"

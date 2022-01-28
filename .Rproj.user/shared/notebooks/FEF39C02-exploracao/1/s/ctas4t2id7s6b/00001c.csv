@@ -1,0 +1,10 @@
+"0","consumo_mais_temperatura_agosto_em_diante %>%
+  ggplot(aes(x = consumo, y = temperatura)) +
+  geom_point(color = ""gray48"") +
+  geom_smooth(method = lm, se = FALSE, color = ""black"") +
+  labs(x = ""Consumo (kWh)"",
+       y = ""Temperatura (ºC)"",
+       title = ""Consumo do ar condicionado x temperatura de CG (agosto a outubro)"")
+"
+"2","`geom_smooth()` using formula 'y ~ x'
+"

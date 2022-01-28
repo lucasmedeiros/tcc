@@ -1,0 +1,2 @@
+"0","temperatura_local_e_externa %>% group_by() %>% "
+"0","  summarise(corr_pearson = cor(temperatura_media, temperatura, method = 'pearson'))"

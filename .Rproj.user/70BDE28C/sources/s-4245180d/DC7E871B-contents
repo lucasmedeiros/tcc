@@ -1,0 +1,125 @@
+---
+title: "A definir"
+author: "Marcella Siqueira e Lucas de Medeiros"
+output: 
+  html_document:
+    code_folding: hide
+---
+# Salve, Gonzagão!
+
+Luiz Gonzaga é um dos mais importantes nomes da música popular brasileira e foi um dos principais responsáveis pela disseminação não apenas do forró, mas da cultura nordestina, em todo o território nacional. Buscando entender mais sobre esse grande artista, nessa análise nós elaboramos perguntas relacionadas aos seus álbuns e músicas, as quais serão vistas a seguir.
+
+## Sobre os Dados
+
+Os dados das músicas e álbuns de Luiz Gonzaga utilizados nessa análise foram obtidos a partir da API pública do Spotify, que fornece recursos de áudio calculados das faixas para aprender sobre danceabilidade, energia e muitas outras variáveis. Para garantir uma maior confiabilidade em nossa exploração, foi realizada uma checagem em relação à dados faltantes no dataset.
+
+```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+library(here)
+theme_set(theme_bw())
+```
+
+```{r}
+dados_gonzaga = read_csv(
+    here("luiz_gonzaga.csv"),
+    col_types = cols(
+        .default = col_double(),
+        album_uri = col_character(),
+        album_name = col_character(),
+        album_img = col_character(),
+        album_release_date = col_character(),
+        album_release_year = col_date(format = ""),
+        album_popularity = col_double(),
+        track_name = col_character(),
+        track_uri = col_character(),
+        danceability = col_double(),
+        energy = col_double(),
+        key = col_character(),
+        loudness = col_double(),
+        mode = col_character(),
+        speechiness = col_double(),
+        acousticness = col_double(),
+        instrumentalness = col_double(),
+        liveness = col_double(),
+        valence = col_double(),
+        tempo = col_double(),
+        duration_ms = col_double(),
+        time_signature = col_double(),
+        key_mode = col_character(),
+        track_popularity = col_double()
+    )
+)
+
+dados_gonzaga <- dados_gonzaga %>% 
+  select(-album_uri, -album_img, -track_uri, -album_release_date)
+
+dados_gonzaga %>% 
+    slice(1:8)
+```
+```{r}
+sum(is.na(dados_gonzaga))
+```
+
+## Como se distribui a popularidade dos álbuns de Luiz Gonzaga?
+
+Para a nossa primeira pergunta, nós buscamos visualizar a distribuição da popularidade dos álbuns de Luiz Gonzaga ao longo dos seus anos de lançamento. A intenção era a de entender quais anos foram os mais "gloriosos" para o artista no que diz respeito à popularidade no Spotify, se ele teve uma sequência de lançamentos populares ou até mesmo se os álbuns lançados após sua morte (coletâneas comemorativas) fizeram mais sucesso que seus álbuns lançados em vida.
+
+```{r}
+dados_gonzaga %>%
+  group_by(album_name) %>% 
+  ggplot(aes(y = album_popularity, x = album_release_year)) +
+  geom_jitter(height = .1, color = "turquoise4", alpha = 0.7) +
+  geom_line(color = "turquoise4") +
+  labs(
+    x = "Ano de lançamento do álbum",
+    y = "Popularidade do álbum",
+    title = "Distribuição da popularidade dos álbuns de Luiz Gonzaga"
+  )
+```
+
+**Com base nessa visualização, podemos notar que os lançamentos após 1989, ano de seu falecimento, são álbuns mais populares no Spotify que os lançados em vida. Não houve um padrão comportamental de vários anos seguidos mantendo um mesmo nível de popularidade, em que é notável a variação de um ano para outro.**
+
+## Como se distribui a popularidade das músicas por tom?
+
+Agora vamos visualizar a distribuição da popularidade das músicas de Luiz Gonzaga no Spotify em relação ao seu tom.
+
+```{r}
+dados_gonzaga %>%
+  ggplot(aes(x = track_popularity, y = key_mode)) +
+  geom_jitter(height = .1, color = "palevioletred4", alpha = 0.7) +
+  stat_summary(geom = "point", color = "orangered", size = 3, fun = median) +
+  labs(
+    x = "Popularidade da música",
+    y = "Tom da música",
+    title = "Distribuição da popularidade das músicas por tom"
+  )
+```
+
+**A partir do gráfico acima é possível visualizar a distribuição total da popularidade das músicas de Luiz Gonzaga no Spotify juntamente com a mediana (percentil de 50%). Através desse valor da mediana, percemos que a distribuição por todos os tons é assimétrica, porém também em todos há outliers que se destacam em relação às outras, e os maiores valores se encontram nos tons F maior, E menor e G maior.**
+
+**A maior concentração de músicas com popularidade entre 0 e 10 já é esperada, e é um comportamento comum em vários artistas da música que possuem perfil no Spotify, já que não são todas as músicas que "viram hit". Porém, ainda assim, é possível observar uma boa quantidade de músicas de Luiz Gonzaga com indicador de popularidade no Spotify acima ou igual a 20.**
+
+## Qual a relação entre a popularidade e a danceabilidade dos álbuns de Luiz Gonzaga?
+
+Não podemos negar que brasileiro é um povo animado – e foi justamente com isso em mente que nós quisemos questionar: a popularidade de uma música de Luiz Gonzaga no Spotify tem relação com sua danceabilidade? Para responder a essa pergunta, nós analisamos dados de popularidade da faixa e a danceabilidade de cada uma delas, visualizando-os num gráfico dispersão para entender se estamos lidando com um formato linear ou não. 
+
+```{r}
+dados_gonzaga %>% 
+  ggplot(aes(x = track_popularity, y = danceability)) +
+  geom_point(color = "salmon", alpha = 0.7) +
+  labs(
+    x = "Danceabilidade da música",
+    y = "Popularidade da música"
+  )
+```
+
+**Diante desse gráfico, é possível perceber que estamos lidando com um formato não-linear e, por isso, não podemos trabalhar com o coeficiente estatístico de Pearson (iremos trabalhar com os coeficientes de Kendall e Spearman). Ainda que não se tenha um formato claro, é interessante perceber a presença de pontos extremos, em que tanto a popularidade quanto a danceabilidade foram bem altos.**
+
+```{r}
+dados_gonzaga %>%
+  summarise(corr_kendall = cor(track_popularity, danceability, method = 'kendall'), 
+            corr_spearman = cor(track_popularity, danceability, method = 'spearman'))
+```
+
+**Através dos resultados dos cálculos dos coeficientes de Kendall e Spearman, é notável que temos uma relação fraca e negativa, dado que os valores estão bem próximos de zero. Assim, concluímos que não há correlação entre a popularidade de uma música no Spotify e sua danceabilidade, ainda que os forrozeiros do nosso país sejam especialmente animados.**
+

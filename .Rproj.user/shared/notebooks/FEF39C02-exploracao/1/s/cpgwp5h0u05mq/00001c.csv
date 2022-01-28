@@ -1,0 +1,11 @@
+"0","temperatura_local_e_externa %>%
+  ggplot(aes(y = temperatura_media, x = temperatura)) +
+  geom_point(color = ""gray48"") +
+  geom_smooth(method = lm, se = FALSE, color = ""black"") +
+  ylim(15, 35) +
+  labs(y = ""Temperatura interna da sala (ºC)"",
+       x = ""Temperatura externa (ºC)"",
+       title = ""Gráfico de temperatura de CG x temperatura interna"")
+"
+"2","`geom_smooth()` using formula 'y ~ x'
+"

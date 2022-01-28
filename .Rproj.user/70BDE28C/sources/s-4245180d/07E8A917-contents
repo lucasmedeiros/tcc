@@ -1,0 +1,66 @@
+---
+title: "A definir"
+author: "Lucas de Medeiros"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+library(here)
+library(lubridate)
+theme_set(theme_bw())
+```
+
+```{r}
+dados_liteme_pow = read_csv2(here("liteme-data--30-06-2021.csv"))
+glimpse(dados_liteme_pow)
+```
+
+```{r}
+dados_th_latec = read_csv2(here("data_th_latec.csv"))
+glimpse(dados_th_latec)
+```
+
+```{r}
+dados_th_cg = read_csv2(here("dados_th_campina_grande.csv"))
+glimpse(dados_th_cg)
+```
+
+```{r}
+get_nome_mes <- Vectorize(vectorize.args = "mes_num", function(mes_num) {
+  switch (as.character(mes_num),
+    "6" = "junho",
+    "7" = "julho",
+    "8" = "agosto"
+  )
+})
+
+dados_liteme_pow_com_data = dados_liteme_pow %>% 
+  mutate(mes = get_nome_mes(substr(Data, 5, 5)))
+
+dados_liteme_pow_com_data %>% 
+  group_by(mes) %>% 
+  summarise(consumo_total = sum((potencia_total * 0.25) / 1000), .groups = "drop")
+```
+
+
+```{r}
+dados_liteme_pow_com_data %>% 
+  group_by(mes) %>% 
+  summarise(consumo_total = (mean(potencia_total) * 730 / 1000), .groups = "drop") %>% 
+  ggplot(mapping = aes(y = consumo_total, x = mes)) +
+  geom_point(color = "turquoise4") +
+  ylim(900, 1200) +
+  labs(
+    title = "Consumo mensal do PowLatec",
+    y = "Consumo total (KW/h)",
+    x = "Mês (2021)"
+  )
+```
+
+```{r}
+
+```
+
