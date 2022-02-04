@@ -1,2 +1,0 @@
-"0","consumo_mais_temperatura_julho %>% group_by() %>%"
-"0","  summarise(corr_pearson = cor(consumo, temperatura, method = 'pearson'))"

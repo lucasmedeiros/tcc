@@ -1,5 +1,0 @@
-"0","dados_temperatura_cg_por_hora = dados_temperatura_cg_data %>%"
-"0","  mutate(mes = as.numeric(substr(data, 6, 7))) %>%"
-"0","  select(data, hora, mes, temperatura)"
-"0",""
-"0","dados_temperatura_cg_por_hora"

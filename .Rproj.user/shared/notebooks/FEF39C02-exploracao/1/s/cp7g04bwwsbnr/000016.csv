@@ -1,6 +1,0 @@
-"0","consumo_mais_temperatura_total = full_join(dados_consumo_por_hora,"
-"0","                                           dados_temperatura_cg_por_hora,"
-"0","                                           by = c(""data"", ""hora"", ""mes"")) %>%"
-"0","  filter(!is.na(consumo) & !is.na(temperatura))"
-"0",""
-"0","consumo_mais_temperatura_total"

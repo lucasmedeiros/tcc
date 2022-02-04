@@ -1,6 +1,0 @@
-"0","consumo_mais_temperatura_interna = full_join(dados_consumo_por_hora,"
-"0","                                           th_latec_formatado,"
-"0","                                           by = c(""data"", ""hora"", ""mes"")) %>%"
-"0","  filter(!is.na(consumo) & !is.na(temperatura_media))"
-"0",""
-"0","consumo_mais_temperatura_interna"

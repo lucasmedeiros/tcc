@@ -3,7 +3,7 @@
     "path": "/cloud/project/exploracao.Rmd",
     "project_path": "exploracao.Rmd",
     "type": "r_markdown",
-    "hash": "0",
+    "hash": "2498726292",
     "contents": "",
     "dirty": false,
     "created": 1631272760660.0,
@@ -12,15 +12,16 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "813,32",
-        "scrollLine": "812"
+        "cursorPosition": "393,24",
+        "scrollLine": "373",
+        "working_dir": "project"
     },
     "folds": "",
-    "lastKnownWriteTime": 1643339286,
+    "lastKnownWriteTime": 1644012812,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1643339286143,
+    "last_content_update": 1644012812632,
     "read_only": false,
     "read_only_alternatives": []
 }
