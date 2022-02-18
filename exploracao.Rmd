@@ -142,7 +142,6 @@ dados_liteme_pow_com_data %>%
        y = "Consumo total (KWh)",
        x = "Mês (2021)")
 ```
-
 Ao passar dos meses, houve um aumento progressivo de consumo. Se é necessário um resfriamento constante da sala para que não haja superaquecimento dos servidores presentes na sala, ela está sempre fechada e não há trânsito de pessoas, o esperado seria que o consumo se mantivesse constante durante todo o período. Porém, há um aumento considerável e progressivo entre os meses de julho e novembro. Ao decorrer dessa análise, vamos investigar fatores que podem ter ocasionado esse aumento.
 
 Agora, vamos fazer um tratamento nos dados para mostrar o consumo médio por horário do dia, durante o período em que foram coletados os dados.
@@ -172,32 +171,7 @@ dados_consumo_por_horario %>%
     vjust = -0.7
   )) +
   ylim(0.5, 2.3) +
-  scale_x_discrete(limits = c(
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23
-  )) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
   labs(title = "Consumo médio por horário do dia",
        x = "Horário do dia",
        y = "Consumo médio (KW/h)")
@@ -285,6 +259,7 @@ meses <- c(
 )
 
 dados_liteme_pow_com_data %>% 
+  filter(potencia_total > 100) %>% 
   group_by(mes, dia) %>%
   summarise(consumo_total = sum(potencia_total) / 1000,
             .groups = "drop") %>% 
@@ -295,39 +270,8 @@ dados_liteme_pow_com_data %>%
     lwd = 0.5,
     fill = "gray87",
     colour="gray48"
-  ) +scale_x_discrete(limits = c(
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    28,
-    29,
-    30,
-    31
-  )) +
+  ) +
+  scale_x_discrete(limits = c(seq(1, 31))) +
   facet_wrap(~mes, labeller = as_labeller(meses),ncol = 2) + 
   labs(title = "Consumo do PowLatec agrupado por mês",
        y = "Consumo (KWh)",
@@ -335,12 +279,6 @@ dados_liteme_pow_com_data %>%
 ```
 
 Como é possível perceber a partir da visualização acima, tivemos alguns dias em que não houve medição no consumo. Isso pode ter sido causado devido a fatores como falha na captação dos dados por parte dos sensores, por exemplo. O mês de julho foi o que teve maior incidência de valores muito baixos de medição de consumo. Possíveis fatores que podem ter ocasionado essas variações muito grandes são queda de energia, desligamento do ar-condicionado em alguns dias (o que teoricamente não deveria acontecer, pois a sala deve ser mantida integralmente resfriada).
-
-```{r, echo=FALSE, warning=FALSE, fig.height=10, fig.width = 15}
-dados_liteme_pow_com_data %>% filter(potencia_total > 10 & potencia_total < 100)
-```
-
-
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=10, fig.width = 15}
 dados_liteme_pow_com_data_filtrados <- dados_liteme_pow_com_data %>% 
@@ -357,39 +295,8 @@ dados_liteme_pow_com_data_filtrados %>%
     lwd = 0.5,
     fill = "gray87",
     colour="gray48"
-  ) +scale_x_discrete(limits = c(
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    28,
-    29,
-    30,
-    31
-  )) +
+  ) +
+  scale_x_discrete(limits = c(seq(1, 31))) +
   facet_wrap(~mes, labeller = as_labeller(meses),ncol = 2) + 
   labs(title = "Consumo do PowLatec agrupado por mês",
        y = "Consumo (KWh)",
@@ -417,39 +324,7 @@ dados_liteme_pow_com_data_filtrados %>%
     position = position_dodge(.9),
     color = "gray48"
   ) +
-  scale_x_discrete(limits = c(
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    28,
-    29,
-    30,
-    31
-  )) +
+  scale_x_discrete(limits = c(seq(1, 31))) +
   facet_wrap(~mes, labeller = as_labeller(meses),ncol = 2) + 
   labs(title = "Média de consumo diário do PowLatec agrupado por mês",
        y = "Média do consumo (KWh)",
@@ -485,32 +360,7 @@ dados_consumo_por_horario_mes %>%
     vjust = -0.7
   )) +
   ylim(0.5, 2.5) +
-  scale_x_discrete(limits = c(
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23
-  )) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
   facet_wrap(~mes, labeller = as_labeller(meses),ncol = 2) + 
   labs(title = "Consumo médio por horário do dia agrupado por mês",
        x = "Horário do dia",
@@ -577,11 +427,13 @@ Vamos visualizar algumas distribuições de temperatura da **sala do LATEC**, ob
 ```{r, echo=FALSE, warning=FALSE, fig.width = 10}
 dados_th_latec_com_data = dados_th_latec %>%
   mutate(data_hora = format(anytime(timestamp), "%d/%m/%Y, %H:%M:%S")) %>%
-  mutate(mes = substr(data_hora, 4, 5), dia = as.numeric(substr(data_hora, 0, 2))) %>% 
-  filter(temperature >= 16)
+  mutate(mes = substr(data_hora, 4, 5), dia = as.numeric(substr(data_hora, 0, 2)))
+
+dados_th_latec_com_data$temperature[dados_th_latec_com_data$temperature < 16] <- NA
 
 dados_th_latec_com_data %>%
   group_by(mes) %>%
+  filter(!is.na(temperature)) %>% 
   summarise(
     temperatura_media = mean(temperature),
     temperatura_desvio = sd(temperature)
@@ -617,7 +469,7 @@ dados_th_latec_com_data %>%
   ylim(0, 40)
 ```
 
-A temperatura média interna da sala, de acordo com os dados obtidos em dezembro, se manteve estável durante os meses, porém é possível perceber a existência de alguns outliers nos meses em que o desvio padrão é mais elevado que os demais: Julho, Agosto, Outubro e Dezembro.
+A temperatura média interna da sala, de acordo com os dados obtidos em dezembro, se manteve estável durante os meses, e é possível observar uma variação um pouco maior em Julho, em que alguns dias o condicionador de ar esteve com temperatura de 16 graus, e em um dado momento foi elevado para 21ºC.
 
 Agora, vamos analisar um gráfico que mostra a média de temperatura da sala do LATEC por horário do dia.
 
@@ -625,6 +477,7 @@ Agora, vamos analisar um gráfico que mostra a média de temperatura da sala do 
 dados_temperatura_por_horario = dados_th_latec_com_data %>%
   mutate(horario = as.numeric(substr(data_hora, 13, 14))) %>%
   group_by(horario) %>%
+  filter(!is.na(temperature)) %>% 
   summarise(media_temp_horario = mean(temperature),
             desvio = sd(temperature))
 
@@ -642,32 +495,8 @@ dados_temperatura_por_horario %>%
     label = round(media_temp_horario, digits = 1),
     vjust = -0.7
   )) +
-  scale_x_discrete(limits = c(
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23
-  )) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  ylim(19, 25) +
   labs(x = "Horário do dia (h)",
        y = "Temperatura da sala (ºC)",
        title = "Gráfico da média da temperatura da sala por horário do dia")
@@ -680,12 +509,14 @@ A fim de tentar identificar quando acontecem essas grandes variações, vamos fa
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width = 15}
 dados_th_latec_com_data %>%
   group_by(mes, dia) %>%
+  filter(!is.na(temperature)) %>% 
   summarise(
     temperatura_media = mean(temperature),
     temperatura_desvio = sd(temperature)
   ) %>%
   ggplot(mapping = aes(y = temperatura_media, x = dia, group = 1)) +
-  geom_bar(stat = "identity", width = .5, fill = "gray87", colour="gray48") +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
   geom_errorbar(
     aes(
       ymin = temperatura_media - temperatura_desvio,
@@ -699,45 +530,15 @@ dados_th_latec_com_data %>%
        y = "Temperatura (ºC)",
        x = "Mês (2021)") +
   facet_wrap(~mes, labeller = as_labeller(meses),ncol = 2) + 
-  scale_x_discrete(limits = c(
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    28,
-    29,
-    30,
-    31
-  )) 
+  ylim(10, 30) +
+  scale_x_discrete(limits = c(seq(1, 31)))
 ```
 
 Como é possível analisar nos gráficos acima, notamos que a partir de agosto, a média da sala se mantém equilibrada, mas alguns dias têm desvios padrão bem mais elevados que outros, além de que Julho foi o que apresentou maior variação na média da temperatura interna dentre os meses analisados, enquanto que nos demais a média de temperatura se manteve estável.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=20, fig.width=10}
 dados_temperatura_por_horario_mes = dados_th_latec_com_data %>%
+  filter(!is.na(temperature)) %>% 
   mutate(horario = as.numeric(substr(data_hora, 13, 14))) %>%
   group_by(horario, mes) %>%
   summarise(media_temp_horario = mean(temperature),
@@ -757,32 +558,7 @@ dados_temperatura_por_horario_mes %>%
     label = round(media_temp_horario, digits = 1),
     vjust = -0.7
   )) +
-  scale_x_discrete(limits = c(
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23
-  )) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
   facet_wrap(~mes, labeller = as_labeller(meses),ncol = 1) + 
   labs(x = "Horário do dia (h)",
        y = "Temperatura da sala (ºC)",
@@ -855,32 +631,7 @@ dados_temperatura_cg_horario = dados_temperatura_cg_data %>%
 dados_temperatura_cg_horario %>%
   ggplot(mapping = aes(x = hora, y = media_temp_cg_horario)) +
   ylim(15, 40) +
-  scale_x_discrete(limits = c(
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23
-  )) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
   geom_point(color = "gray48")  +
   geom_line(color = "gray48") +
   geom_errorbar(
@@ -922,39 +673,7 @@ dados_temperatura_cg_data %>%
     color = "gray48"
   ) +
   facet_wrap(~mes, labeller = as_labeller(meses),ncol = 2) + 
-  scale_x_discrete(limits = c(
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    28,
-    29,
-    30,
-    31
-  )) +
+  scale_x_discrete(limits = c(seq(1, 31))) +
   labs(title = "Temperatura média de CG por mês",
        y = "Temperatura (ºC)",
        x = "Dia do mês") +
@@ -970,32 +689,7 @@ dados_temperatura_cg_horario_mes = dados_temperatura_cg_data %>%
 
 dados_temperatura_cg_horario_mes %>%
   ggplot(mapping = aes(x = hora, y = media_temp_cg_horario)) +
-  scale_x_discrete(limits = c(
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23
-  )) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
   geom_point(color = "gray48")  +
   geom_line(color = "gray48") +
   geom_errorbar(
@@ -1262,39 +956,7 @@ temperatura_janeiro_2021 %>%
     position = position_dodge(.9),
     color = "gray48"
   ) +
-  scale_x_discrete(limits = c(
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    28,
-    29,
-    30,
-    31
-  )) +
+  scale_x_discrete(limits = c(seq(1, 31))) +
   labs(title = "Temperatura média de CG janeiro 2021",
        y = "Temperatura (ºC)",
        x = "Dia") +
@@ -1320,39 +982,7 @@ temperatura_janeiro_2022 %>%
     position = position_dodge(.9),
     color = "gray48"
   ) +
-  scale_x_discrete(limits = c(
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    28,
-    29,
-    30,
-    31
-  )) +
+  scale_x_discrete(limits = c(seq(1, 31))) +
   labs(title = "Temperatura média de CG janeiro 2022",
        y = "Temperatura (ºC)",
        x = "Dia") +
@@ -1396,5 +1026,235 @@ temperatura_janeiros %>%
 temperatura_janeiros %>% group_by() %>% 
   summarise(corr_pearson = cor(temperatura, temperatura22, method = 'pearson'))
 ```
+
+# Experimentos
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_m1 = read.csv(here("data_machine1.csv"))
+dados_m2 = read.csv(here("data_machine2.csv"))
+dados_liteme_pow_exp = read_csv2(here("liteme-data--06-02-2022.csv"))
+dados_th_latec_exp = read_csv2(here("data_th_latec_exp.csv"))
+```
+
+## Semana 1
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_m1_com_data = dados_m1 %>%
+  mutate(data_hora = format(anytime(timestamp), "%d/%m/%Y, %H:%M:%S"), horario = as.numeric(substr(data_hora, 13, 14)), dia = substr(data_hora, 0, 10))
+
+dados_m2_com_data = dados_m2 %>% 
+  mutate(data_hora = format(anytime(timestamp), "%d/%m/%Y, %H:%M:%S"), horario = as.numeric(substr(data_hora, 13, 14)), dia = substr(data_hora, 0, 10))
+
+dados_m1_com_data
+dados_m2_com_data
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+sumario_m1 = dados_m1_com_data %>%
+  group_by(dia, horario) %>% 
+  summarise(media_temp = mean(temperature), media_uso = mean(usage))
+
+sumario_m2 = dados_m2_com_data %>% 
+  group_by(dia, horario) %>% 
+  summarise(media_temp = mean(temperature), media_uso = mean(usage))
+
+sumario_m1
+sumario_m2
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+sumario_m1 %>% 
+  filter(dia >= "07/02" & dia < "14/02") %>% 
+  ggplot(mapping = aes(y = media_temp, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  ylim(25, 50) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Temperatura da CPU da máquina 01 por horário do dia (primeira semana)",
+       x = "Horário do dia",
+       y = "Temperatura da CPU (ºC)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+sumario_m1 %>% 
+  filter(dia >= "07/02" & dia < "14/02") %>% 
+  ggplot(mapping = aes(y = media_uso, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  ylim(0, 100) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Uso da CPU da máquina 01 por horário do dia (primeira semana)",
+       x = "Horário do dia",
+       y = "Uso de CPU (%)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+sumario_m2 %>% 
+  filter(dia >= "07/02" & dia < "14/02") %>% 
+  ggplot(mapping = aes(y = media_temp, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  ylim(25, 50) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Temperatura da CPU da máquina 02 por horário do dia (primeira semana)",
+       x = "Horário do dia",
+       y = "Temperatura da CPU (ºC)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+sumario_m2 %>% 
+  filter(dia >= "07/02" & dia < "14/02") %>% 
+  ggplot(mapping = aes(y = media_uso, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  ylim(0, 100) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Uso da CPU da máquina 02 por horário do dia (primeira semana)",
+       x = "Horário do dia",
+       y = "Uso de CPU (%)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_liteme_pow_exp_com_data = dados_liteme_pow_exp %>%
+  mutate(
+    dia = substr(Data, 0, 10),
+    dia_sem_ano = substr(Data, 0, 5),
+    horario = as.numeric(sub(":.*", "", substr(Data, 13, 100))),
+    consumo = potencia_total / 1000
+)
+
+dados_liteme_pow_exp_com_data
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.width = 10}
+dados_liteme_pow_exp_com_data  %>%
+  filter(dia >= "07/02" & dia < "14/02") %>% 
+  ggplot(aes(x = horario, y = consumo, group = 1)) +
+  facet_wrap(~dia, ncol = 2) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  ylim(0, 3) +
+  labs(title = "Consumo do PowLatec por horário do dia (primeira semana)",
+       y = "Consumo (KWh)",
+       x = "Horário do dia")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+sumario_consumo_exp = dados_liteme_pow_exp_com_data %>%
+  group_by(dia) %>% 
+  summarise(consumo_total = sum(potencia_total) / 1000, media_consumo = mean((potencia_total) / 1000), desvio = sd(potencia_total) / 1000)
+
+sumario_consumo_exp
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.width=10}
+sumario_consumo_exp %>% 
+  filter(dia >= "07/02" & dia < "14/02") %>% 
+  ggplot(mapping = aes(y = media_consumo, x = dia, group = 1)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = media_consumo - desvio, ymax = media_consumo + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  ylim(1, 3) +
+  labs(title = "Consumo médio do PowLatec por dia (primeira semana)",
+       x = "Dia da análise",
+       y = "Consumo médio (KW/h)")
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.width = 10}
+sumario_consumo_exp %>%
+  filter(dia >= "07/02" & dia < "14/02") %>% 
+  ggplot(aes(x = dia, y = consumo_total, group = 1)) +
+  geom_bar(
+    stat = "identity",
+    width = .7,
+    lwd = 0.5,
+    fill = "gray87",
+    colour="gray48"
+  ) +
+  geom_point(color = "gray48", size = 3) +
+  geom_line(color = "gray48") +
+  geom_text(aes(
+    label = round(consumo_total, digits = 2),
+    vjust = -0.7
+  )) +
+  ylim(0, 50) +
+  labs(title = "Consumo total do PowLatec por dia (primeira semana)",
+       y = "Consumo total (KWh)",
+       x = "Dia da análise")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_th_latec_exp_com_data = dados_th_latec_exp %>%
+  mutate(
+    data_hora = format(anytime(timestamp), "%d/%m/%Y, %H:%M:%S"),
+    horario = as.numeric(substr(data_hora, 13, 14)),
+    dia = substr(data_hora, 0, 10)
+)
+
+dados_th_latec_exp_com_data
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+sumario_th_latec_exp = dados_th_latec_exp_com_data %>%
+  group_by(dia, horario) %>% 
+  summarise(media_temp = mean(temperature), desvio = sd(temperature))
+
+sumario_th_latec_exp
+```
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE, fig.width=10}
+dados_th_latec_exp_com_data %>%
+  group_by(dia) %>% 
+  summarise(media_temp = mean(temperature), desvio = sd(temperature)) %>% 
+  filter(dia >= "07/02" & dia < "14/02") %>% 
+  ggplot(mapping = aes(x = dia, y = media_temp, group = 1)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio, ymax = media_temp + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  geom_text(aes(
+    label = round(media_temp, digits = 2),
+    vjust = -0.7
+  )) +
+  ylim(19, 25) +
+  labs(x = "Dia da análise",
+       y = "Temperatura da sala (ºC)",
+       title = "Gráfico da média da temperatura da sala por dia (primeira semana)")
+```
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE, fig.width = 10, fig.height = 15}
+sumario_th_latec_exp %>%
+  filter(dia >= "07/02" & dia < "14/02") %>% 
+  ggplot(mapping = aes(x = horario, y = media_temp)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio, ymax = media_temp + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  ylim(19, 30) +
+  labs(x = "Horário do dia (h)",
+       y = "Temperatura da sala (ºC)",
+       title = "Gráfico da média da temperatura da sala durante os dias da semana (primeira semana)") +
+  facet_wrap(~dia, ncol = 2)
+```
+
 
 

@@ -1,4 +1,4 @@
-Nome;Data;P - Total (W);P - Fase A (W);P - Fase B (W);P - Fase C (W);Q - Total (var);Q - Fase A (var);Q - Fase B (var);Q - Fase C (var);FP - Total;FP - Fase A;FP - Fase B;FP - Fase C;V - Fase A (V);V - Fase B (V);V - Fase C (V);I - Fase A (A);I - Fase B (A);I - Fase C (A)
+Nome;Data;potencia_total;P - Fase A (W);P - Fase B (W);P - Fase C (W);Q - Total (var);Q - Fase A (var);Q - Fase B (var);Q - Fase C (var);FP - Total;FP - Fase A;FP - Fase B;FP - Fase C;V - Fase A (V);V - Fase B (V);V - Fase C (V);I - Fase A (A);I - Fase B (A);I - Fase C (A)
 PowLatec;06/02/2022, 0:00:00;1540,1743595041323;0;0;1540,1743595041323;0;0;0;0;1;1;1;1;0;0;218,6426652892562;0;0;7,366095041322314
 PowLatec;06/02/2022, 1:00:00;1549,637313432836;0;0;1549,637313432836;0;0;0;0;1;1;1;1;0;0;217,94102345415777;0;0;7,4242857142857135
 PowLatec;06/02/2022, 2:00:00;1552,6538492871691;0;0;1552,6538492871691;0;0;0;0;1;1;1;1;0;0;218,38030549898167;0;0;7,4916904276985745
