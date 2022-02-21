@@ -1052,23 +1052,29 @@ dados_m2_com_data
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
 sumario_m1 = dados_m1_com_data %>%
   group_by(dia, horario) %>% 
-  summarise(media_temp = mean(temperature), media_uso = mean(usage))
+  summarise(media_temp = mean(temperature), media_uso = mean(usage), desvio_temp = sd(temperature), desvio_uso = sd(usage))
 
 sumario_m2 = dados_m2_com_data %>% 
   group_by(dia, horario) %>% 
-  summarise(media_temp = mean(temperature), media_uso = mean(usage))
+  summarise(media_temp = mean(temperature), media_uso = mean(usage), desvio_temp = sd(temperature), desvio_uso = sd(usage))
 
 sumario_m1
 sumario_m2
 ```
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
 sumario_m1 %>% 
   filter(dia >= "07/02" & dia < "14/02") %>% 
   ggplot(mapping = aes(y = media_temp, x = horario)) +
   geom_point(color = "gray48") +
   geom_line(color = "gray48") +
   facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio_temp, ymax = media_temp + desvio_temp),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
   ylim(25, 50) +
   scale_x_discrete(limits = c(seq(0, 23))) +
   labs(title = "Temperatura da CPU da máquina 01 por horário do dia (primeira semana)",
@@ -1076,12 +1082,18 @@ sumario_m1 %>%
        y = "Temperatura da CPU (ºC)")
 ```
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
 sumario_m1 %>% 
   filter(dia >= "07/02" & dia < "14/02") %>% 
   ggplot(mapping = aes(y = media_uso, x = horario)) +
   geom_point(color = "gray48") +
   geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = pmax(media_uso - desvio_uso, 0), ymax = media_uso + desvio_uso),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
   facet_wrap(~dia, ncol = 2) +
   ylim(0, 100) +
   scale_x_discrete(limits = c(seq(0, 23))) +
@@ -1090,13 +1102,19 @@ sumario_m1 %>%
        y = "Uso de CPU (%)")
 ```
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
 sumario_m2 %>% 
   filter(dia >= "07/02" & dia < "14/02") %>% 
   ggplot(mapping = aes(y = media_temp, x = horario)) +
   geom_point(color = "gray48") +
   geom_line(color = "gray48") +
   facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio_temp, ymax = media_temp + desvio_temp),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
   ylim(25, 50) +
   scale_x_discrete(limits = c(seq(0, 23))) +
   labs(title = "Temperatura da CPU da máquina 02 por horário do dia (primeira semana)",
@@ -1104,13 +1122,19 @@ sumario_m2 %>%
        y = "Temperatura da CPU (ºC)")
 ```
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
 sumario_m2 %>% 
   filter(dia >= "07/02" & dia < "14/02") %>% 
   ggplot(mapping = aes(y = media_uso, x = horario)) +
   geom_point(color = "gray48") +
   geom_line(color = "gray48") +
   facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = pmax(media_uso - desvio_uso, 0), ymax = media_uso + desvio_uso),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
   ylim(0, 100) +
   scale_x_discrete(limits = c(seq(0, 23))) +
   labs(title = "Uso da CPU da máquina 02 por horário do dia (primeira semana)",
@@ -1130,7 +1154,7 @@ dados_liteme_pow_exp_com_data = dados_liteme_pow_exp %>%
 dados_liteme_pow_exp_com_data
 ```
 
-```{r, echo=FALSE, warning=FALSE, fig.width = 10}
+```{r, echo=FALSE, warning=FALSE, fig.width = 15, fig.height=15}
 dados_liteme_pow_exp_com_data  %>%
   filter(dia >= "07/02" & dia < "14/02") %>% 
   ggplot(aes(x = horario, y = consumo, group = 1)) +
@@ -1256,5 +1280,15 @@ sumario_th_latec_exp %>%
   facet_wrap(~dia, ncol = 2)
 ```
 
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+temperatura_fevereiro_2021 = dados_th_cg %>% 
+  mutate(
+    hora = as.numeric(substr(hora_utc, 0, 2)),
+    temperatura = (temperatura_max_hora_ant + temperatura_min_hora_ant) / 2,
+    mes = substr(data, 6, 7),
+    dia = as.numeric(substr(data, 9, 10))
+  ) %>%  filter(mes == "02")
 
+temperatura_fevereiro_2021
+```
 
