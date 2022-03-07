@@ -28,7 +28,7 @@ dados_th_cg_2022 = read_csv2(here("dados_th_campina_grande_2022.csv"))
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
 dados_m1 = read.csv(here("data_machine1.csv"))
 dados_m2 = read.csv(here("data_machine2.csv"))
-dados_liteme_pow_exp = read_csv2(here("liteme-data--06-02-2022.csv")) %>% filter(potencia_total > 0)
+dados_liteme_pow_exp = read_csv2(here("liteme-data--06-02-2022.csv"))
 dados_th_latec_exp = read_csv2(here("data_th_latec_exp.csv"))
 ```
 
@@ -624,6 +624,120 @@ sumario_th_latec_exp %>%
   facet_wrap(~dia, ncol = 2)
 ```
 
+## Semana 4
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m1 %>% 
+  filter(semana_exp == "Semana 4") %>% 
+  ggplot(mapping = aes(y = media_temp, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio_temp, ymax = media_temp + desvio_temp),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Temperatura da CPU da máquina 01 por horário do dia (4ª semana)",
+       x = "Horário do dia",
+       y = "Temperatura da CPU (ºC)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m1 %>% 
+  filter(semana_exp == "Semana 4") %>% 
+  ggplot(mapping = aes(y = media_uso, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = pmax(media_uso - desvio_uso, 0), ymax = media_uso + desvio_uso),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  facet_wrap(~dia, ncol = 2) +
+  ylim(0, 100) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Uso da CPU da máquina 01 por horário do dia (4ª semana)",
+       x = "Horário do dia",
+       y = "Uso de CPU (%)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m2 %>% 
+  filter(semana_exp == "Semana 4") %>% 
+  ggplot(mapping = aes(y = media_temp, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio_temp, ymax = media_temp + desvio_temp),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Temperatura da CPU da máquina 02 por horário do dia (4ª semana)",
+       x = "Horário do dia",
+       y = "Temperatura da CPU (ºC)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m2 %>% 
+  filter(semana_exp == "Semana 4") %>% 
+  ggplot(mapping = aes(y = media_uso, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = pmax(media_uso - desvio_uso, 0), ymax = media_uso + desvio_uso),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  ylim(0, 100) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Uso da CPU da máquina 02 por horário do dia (4ª semana)",
+       x = "Horário do dia",
+       y = "Uso de CPU (%)")
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.width = 15, fig.height=15}
+dados_liteme_pow_exp_com_data  %>%
+  filter(semana_exp == "Semana 4") %>% 
+  ggplot(aes(x = horario, y = consumo, group = 1)) +
+  facet_wrap(~dia, ncol = 2) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  ylim(0, 3) +
+  labs(title = "Consumo do PowLatec por horário do dia (4ª semana)",
+       y = "Consumo (KWh)",
+       x = "Horário do dia")
+```
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE, fig.width = 10, fig.height = 10}
+sumario_th_latec_exp %>%
+  filter(semana_exp == "Semana 4") %>% 
+  ggplot(mapping = aes(x = horario, y = media_temp)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio, ymax = media_temp + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  ylim(19, 30) +
+  labs(x = "Horário do dia (h)",
+       y = "Temperatura da sala (ºC)",
+       title = "Gráfico da média da temperatura da sala durante os dias da semana (4ª semana)") +
+  facet_wrap(~dia, ncol = 2)
+```
+
 ## Temperatura interna por dia durante os experimentos
 
 ```{r, echo=FALSE, warning=FALSE,message=FALSE, fig.width=10}
@@ -666,6 +780,11 @@ sumario_consumo_exp %>%
     label = round(consumo_total, digits = 2),
     vjust = -0.7
   )) +
+  geom_text(aes(
+    label = substr(dia, 0, 5),
+    vjust = 5
+  ),
+    color = "gray50",) +
   ylim(0, 50) +
   labs(title = "Consumo total do PowLatec por dia (3ª semana)",
        y = "Consumo total (KWh)",
@@ -700,7 +819,7 @@ sumario_consumo_exp %>%
 
 ## Correlação entre temperatura interna e consumo
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 consumo_mais_temperatura_interna_exp %>%
   ggplot(aes(x = consumo, y = temperatura_media)) +
   geom_point(color = "gray48") +
@@ -720,7 +839,7 @@ consumo_mais_temperatura_interna_exp %>%
 
 ## Correlação entre temperatura interna e temperatura de CPU das máquinas
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 cpu_m1_mais_temperatura_interna_exp %>%
   ggplot(aes(x = temperatura_cpu_media, y = temperatura_media)) +
   geom_point(color = "gray48") +
@@ -738,7 +857,7 @@ cpu_m1_mais_temperatura_interna_exp %>%
   )
 ```
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 cpu_m2_mais_temperatura_interna_exp %>%
   ggplot(aes(x = temperatura_cpu_media, y = temperatura_media)) +
   geom_point(color = "gray48") +
@@ -758,7 +877,7 @@ cpu_m2_mais_temperatura_interna_exp %>%
 
 ## Correlação entre temperatura externa e consumo durante o experimento
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 consumo_mais_temperatura_exp %>%
   ggplot(aes(x = consumo, y = temperatura)) +
   geom_point(color = "gray48") +
