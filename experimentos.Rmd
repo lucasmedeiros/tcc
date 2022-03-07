@@ -1,0 +1,779 @@
+---
+title: "Experimentos no condicionador de ar da sala do LATEC"
+author: "Lucas de Medeiros"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+library(tidyverse)
+library(here)
+library(anytime)
+library(lubridate)
+library(chemometrics)
+library(dplyr)
+theme_set(theme_bw())
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_liteme_pow = read_csv2(here("liteme-data--30-06-2021.csv"))
+dados_th_latec = read_csv2(here("data_th_latec.csv"))
+dados_th_cg = read_csv2(here("dados_th_campina_grande.csv"))
+dados_th_cg_2022 = read_csv2(here("dados_th_campina_grande_2022.csv"))
+```
+
+# Experimentos (work in progress)
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_m1 = read.csv(here("data_machine1.csv"))
+dados_m2 = read.csv(here("data_machine2.csv"))
+dados_liteme_pow_exp = read_csv2(here("liteme-data--06-02-2022.csv")) %>% filter(potencia_total > 0)
+dados_th_latec_exp = read_csv2(here("data_th_latec_exp.csv"))
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_m1_com_data = dados_m1 %>%
+  mutate(data_hora = format(anytime(timestamp), "%d/%m/%Y, %H:%M:%S"), horario = as.numeric(substr(data_hora, 13, 14)), dia = substr(data_hora, 0, 10))
+
+dados_m2_com_data = dados_m2 %>% 
+  mutate(data_hora = format(anytime(timestamp), "%d/%m/%Y, %H:%M:%S"), horario = as.numeric(substr(data_hora, 13, 14)), dia = substr(data_hora, 0, 10))
+
+dados_m1_com_data
+dados_m2_com_data
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+sumario_m1 = dados_m1_com_data %>%
+  group_by(dia, horario) %>% 
+  summarise(
+    media_temp = mean(temperature, trim = 0.25),
+    media_uso = mean(usage, trim = 0.25),
+    desvio_temp = sd_trim(temperature, trim = 0.25, const = TRUE),
+    desvio_uso = sd_trim(usage, trim = 0.25, const = TRUE)
+  ) %>% 
+  mutate(
+    semana_exp = case_when(
+      dia == "07/02/2022" | dia == "08/02/2022" | dia == "09/02/2022" | dia == "10/02/2022" | dia == "11/02/2022" | dia == "12/02/2022" | dia == "13/02/2022" ~ "Semana 1",
+      dia == "14/02/2022" | dia == "15/02/2022" | dia == "16/02/2022" | dia == "17/02/2022" | dia == "18/02/2022" | dia == "19/02/2022" | dia == "20/02/2022" ~ "Semana 2",
+      dia == "21/02/2022" | dia == "22/02/2022" | dia == "23/02/2022" | dia == "24/02/2022" | dia == "25/02/2022" | dia == "26/02/2022" | dia == "27/02/2022" ~ "Semana 3",
+      dia == "28/02/2022" | dia == "01/03/2022" | dia == "02/03/2022" | dia == "03/03/2022" | dia == "04/03/2022" | dia == "05/03/2022" | dia == "06/03/2022" ~ "Semana 4"
+    )
+  )
+
+sumario_m2 = dados_m2_com_data %>% 
+  group_by(dia, horario) %>% 
+  summarise(
+    media_temp = mean(temperature, trim = 0.25),
+    media_uso = mean(usage, trim = 0.25),
+    desvio_temp = sd_trim(temperature, trim = 0.25, const = TRUE),
+    desvio_uso = sd_trim(usage, trim = 0.25, const = TRUE)
+  ) %>% 
+  mutate(
+    semana_exp = case_when(
+      dia == "07/02/2022" | dia == "08/02/2022" | dia == "09/02/2022" | dia == "10/02/2022" | dia == "11/02/2022" | dia == "12/02/2022" | dia == "13/02/2022" ~ "Semana 1",
+      dia == "14/02/2022" | dia == "15/02/2022" | dia == "16/02/2022" | dia == "17/02/2022" | dia == "18/02/2022" | dia == "19/02/2022" | dia == "20/02/2022" ~ "Semana 2",
+      dia == "21/02/2022" | dia == "22/02/2022" | dia == "23/02/2022" | dia == "24/02/2022" | dia == "25/02/2022" | dia == "26/02/2022" | dia == "27/02/2022" ~ "Semana 3",
+      dia == "28/02/2022" | dia == "01/03/2022" | dia == "02/03/2022" | dia == "03/03/2022" | dia == "04/03/2022" | dia == "05/03/2022" | dia == "06/03/2022" ~ "Semana 4"
+    )
+  )
+
+sumario_m1
+sumario_m2
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_liteme_pow_exp_com_data = dados_liteme_pow_exp %>%
+  mutate(
+    dia = substr(Data, 0, 10),
+    dia_sem_ano = substr(Data, 0, 5),
+    horario = as.numeric(sub(":.*", "", substr(Data, 13, 100))),
+    consumo = potencia_total / 1000
+) %>% 
+  filter(potencia_total > 100) %>% 
+  mutate(
+    semana_exp = case_when(
+      dia == "07/02/2022" | dia == "08/02/2022" | dia == "09/02/2022" | dia == "10/02/2022" | dia == "11/02/2022" | dia == "12/02/2022" | dia == "13/02/2022" ~ "Semana 1",
+      dia == "14/02/2022" | dia == "15/02/2022" | dia == "16/02/2022" | dia == "17/02/2022" | dia == "18/02/2022" | dia == "19/02/2022" | dia == "20/02/2022" ~ "Semana 2",
+      dia == "21/02/2022" | dia == "22/02/2022" | dia == "23/02/2022" | dia == "24/02/2022" | dia == "25/02/2022" | dia == "26/02/2022" | dia == "27/02/2022" ~ "Semana 3",
+      dia == "28/02/2022" | dia == "01/03/2022" | dia == "02/03/2022" | dia == "03/03/2022" | dia == "04/03/2022" | dia == "05/03/2022" | dia == "06/03/2022" ~ "Semana 4"
+    )
+  )
+
+dados_liteme_pow_exp_com_data
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+sumario_consumo_exp = dados_liteme_pow_exp_com_data %>%
+  group_by(dia) %>% 
+  summarise(
+    consumo_total = sum(potencia_total) / 1000,
+    media_consumo = mean(potencia_total / 1000, trim=0.25),
+    desvio = sd_trim(potencia_total / 1000, trim = 0.25, const = TRUE)
+  ) %>% 
+  mutate(
+    semana_exp = case_when(
+      dia == "07/02/2022" | dia == "08/02/2022" | dia == "09/02/2022" | dia == "10/02/2022" | dia == "11/02/2022" | dia == "12/02/2022" | dia == "13/02/2022" ~ "Semana 1",
+      dia == "14/02/2022" | dia == "15/02/2022" | dia == "16/02/2022" | dia == "17/02/2022" | dia == "18/02/2022" | dia == "19/02/2022" | dia == "20/02/2022" ~ "Semana 2",
+      dia == "21/02/2022" | dia == "22/02/2022" | dia == "23/02/2022" | dia == "24/02/2022" | dia == "25/02/2022" | dia == "26/02/2022" | dia == "27/02/2022" ~ "Semana 3",
+      dia == "28/02/2022" | dia == "01/03/2022" | dia == "02/03/2022" | dia == "03/03/2022" | dia == "04/03/2022" | dia == "05/03/2022" | dia == "06/03/2022" ~ "Semana 4"
+    ),
+    dia_exp = case_when(
+      dia == "07/02/2022" | dia == "14/02/2022" | dia == "21/02/2022" | dia == "28/02/2022" ~ "Dia 1",
+      dia == "08/02/2022" | dia == "15/02/2022" | dia == "22/02/2022" | dia == "01/03/2022" ~ "Dia 2",
+      dia == "09/02/2022" | dia == "16/02/2022" | dia == "23/02/2022" | dia == "02/03/2022" ~ "Dia 3",
+      dia == "10/02/2022" | dia == "17/02/2022" | dia == "24/02/2022" | dia == "03/03/2022" ~ "Dia 4",
+      dia == "11/02/2022" | dia == "18/02/2022" | dia == "25/02/2022" | dia == "04/03/2022" ~ "Dia 5",
+      dia == "12/02/2022" | dia == "19/02/2022" | dia == "26/02/2022" | dia == "05/03/2022" ~ "Dia 6",
+      dia == "13/02/2022" | dia == "20/02/2022" | dia == "27/02/2022" | dia == "06/03/2022" ~ "Dia 7"
+    )
+  )
+
+sumario_consumo_exp
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_th_latec_exp_com_data = dados_th_latec_exp %>%
+  mutate(
+    data_hora = format(anytime(timestamp), "%d/%m/%Y, %H:%M:%S"),
+    horario = as.numeric(substr(data_hora, 13, 14)),
+    dia = substr(data_hora, 0, 10),
+    semana_exp = case_when(
+      dia == "07/02/2022" | dia == "08/02/2022" | dia == "09/02/2022" | dia == "10/02/2022" | dia == "11/02/2022" | dia == "12/02/2022" | dia == "13/02/2022" ~ "Semana 1",
+      dia == "14/02/2022" | dia == "15/02/2022" | dia == "16/02/2022" | dia == "17/02/2022" | dia == "18/02/2022" | dia == "19/02/2022" | dia == "20/02/2022" ~ "Semana 2",
+      dia == "21/02/2022" | dia == "22/02/2022" | dia == "23/02/2022" | dia == "24/02/2022" | dia == "25/02/2022" | dia == "26/02/2022" | dia == "27/02/2022" ~ "Semana 3",
+      dia == "28/02/2022" | dia == "01/03/2022" | dia == "02/03/2022" | dia == "03/03/2022" | dia == "04/03/2022" | dia == "05/03/2022" | dia == "06/03/2022" ~ "Semana 4"
+  ),
+    dia_exp = case_when(
+      dia == "07/02/2022" | dia == "14/02/2022" | dia == "21/02/2022" | dia == "28/02/2022" ~ "Dia 1",
+      dia == "08/02/2022" | dia == "15/02/2022" | dia == "22/02/2022" | dia == "01/03/2022" ~ "Dia 2",
+      dia == "09/02/2022" | dia == "16/02/2022" | dia == "23/02/2022" | dia == "02/03/2022" ~ "Dia 3",
+      dia == "10/02/2022" | dia == "17/02/2022" | dia == "24/02/2022" | dia == "03/03/2022" ~ "Dia 4",
+      dia == "11/02/2022" | dia == "18/02/2022" | dia == "25/02/2022" | dia == "04/03/2022" ~ "Dia 5",
+      dia == "12/02/2022" | dia == "19/02/2022" | dia == "26/02/2022" | dia == "05/03/2022" ~ "Dia 6",
+      dia == "13/02/2022" | dia == "20/02/2022" | dia == "27/02/2022" | dia == "06/03/2022" ~ "Dia 7"
+    )
+) %>% filter(!is.na(semana_exp))
+
+dados_th_latec_exp_com_data
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+temperatura_fevereiro_2021 = dados_th_cg %>% 
+  mutate(
+    horario = as.numeric(substr(hora_utc, 0, 2)),
+    temperatura = (temperatura_max_hora_ant + temperatura_min_hora_ant) / 2,
+    mes = substr(data, 6, 7),
+    dia = as.numeric(substr(data, 9, 10)),
+    dia_sem_ano = substr(data, 6, 10)
+  ) %>%  filter(mes == "02") %>% 
+  select(temperatura, dia_sem_ano, horario)
+
+temperatura_fevereiro_2021
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+sumario_th_latec_exp = dados_th_latec_exp_com_data %>%
+  group_by(dia, horario) %>% 
+  summarise(media_temp = mean(temperature), desvio = sd(temperature)) %>% 
+  mutate(
+    semana_exp = case_when(
+      dia == "07/02/2022" | dia == "08/02/2022" | dia == "09/02/2022" | dia == "10/02/2022" | dia == "11/02/2022" | dia == "12/02/2022" | dia == "13/02/2022" ~ "Semana 1",
+      dia == "14/02/2022" | dia == "15/02/2022" | dia == "16/02/2022" | dia == "17/02/2022" | dia == "18/02/2022" | dia == "19/02/2022" | dia == "20/02/2022" ~ "Semana 2",
+      dia == "21/02/2022" | dia == "22/02/2022" | dia == "23/02/2022" | dia == "24/02/2022" | dia == "25/02/2022" | dia == "26/02/2022" | dia == "27/02/2022" ~ "Semana 3",
+      dia == "28/02/2022" | dia == "01/03/2022" | dia == "02/03/2022" | dia == "03/03/2022" | dia == "04/03/2022" | dia == "05/03/2022" | dia == "06/03/2022" ~ "Semana 4"
+    )
+  )
+
+sumario_th_latec_exp
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_pow_exp_formatados = dados_liteme_pow_exp_com_data %>% 
+  mutate(
+    data = dmy(substr(Data, 0, 10)),
+    dia_sem_ano = substr(data, 6, 10)
+  ) %>% select (dia_sem_ano, consumo, horario)
+
+dados_pow_exp_formatados
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+consumo_mais_temperatura_exp = full_join(temperatura_fevereiro_2021,
+                                        dados_pow_exp_formatados,
+                                        by = c("dia_sem_ano", "horario")) %>%
+  filter(!is.na(temperatura) & !is.na(consumo)) %>% 
+  mutate(
+    semana_exp = case_when(
+      dia_sem_ano == "02-07" | dia_sem_ano == "02-08" | dia_sem_ano == "02-09" | dia_sem_ano == "02-10" | dia_sem_ano == "02-11" | dia_sem_ano == "02-12" | dia_sem_ano == "02-13" ~ "Semana 1",
+      dia_sem_ano == "02-14" | dia_sem_ano == "02-15" | dia_sem_ano == "02-16" | dia_sem_ano == "02-17" | dia_sem_ano == "02-18" | dia_sem_ano == "02-19" | dia_sem_ano == "02-20" ~ "Semana 2",
+      dia_sem_ano == "02-21" | dia_sem_ano == "02-22" | dia_sem_ano == "02-23" | dia_sem_ano == "02-24" | dia_sem_ano == "02-25" | dia_sem_ano == "02-26" | dia_sem_ano == "02-27" ~ "Semana 3",
+      dia_sem_ano == "02-28" | dia_sem_ano == "03-01" | dia_sem_ano == "03-02" | dia_sem_ano == "03-03" | dia_sem_ano == "03-04" | dia_sem_ano == "03-05" | dia_sem_ano == "03-06" ~ "Semana 4"
+    )
+  )
+
+consumo_mais_temperatura_exp
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_th_latec_exp_formatados = dados_th_latec_exp_com_data %>% 
+  mutate(
+    data = dmy(substr(dia, 0, 10)),
+    dia_sem_ano = substr(data, 6, 10)
+  ) %>%
+  group_by(horario, dia_sem_ano) %>% 
+  summarise(temperatura_media = mean(temperature))
+
+dados_th_latec_exp_formatados
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+consumo_mais_temperatura_interna_exp = full_join(dados_th_latec_exp_formatados,
+                                        dados_pow_exp_formatados,
+                                        by = c("dia_sem_ano", "horario")) %>%
+  filter(!is.na(temperatura_media) & !is.na(consumo))
+
+consumo_mais_temperatura_interna_exp
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_m1_formatados = dados_m1_com_data %>% 
+  mutate(
+    data = dmy(substr(dia, 0, 10)),
+    dia_sem_ano = substr(data, 6, 10)
+  ) %>%
+  group_by(horario, dia_sem_ano) %>% 
+  summarise(temperatura_cpu_media = mean(temperature))
+
+dados_m1_formatados
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+dados_m2_formatados = dados_m2_com_data %>% 
+  mutate(
+    data = dmy(substr(dia, 0, 10)),
+    dia_sem_ano = substr(data, 6, 10)
+  ) %>%
+  group_by(horario, dia_sem_ano) %>% 
+  summarise(temperatura_cpu_media = mean(temperature))
+
+dados_m2_formatados
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+cpu_m1_mais_temperatura_interna_exp = full_join(dados_th_latec_exp_formatados,
+                                        dados_m1_formatados,
+                                        by = c("dia_sem_ano", "horario")) %>%
+  filter(!is.na(temperatura_media) & !is.na(temperatura_cpu_media))
+
+cpu_m1_mais_temperatura_interna_exp
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+cpu_m2_mais_temperatura_interna_exp = full_join(dados_th_latec_exp_formatados,
+                                        dados_m2_formatados,
+                                        by = c("dia_sem_ano", "horario")) %>%
+  filter(!is.na(temperatura_media) & !is.na(temperatura_cpu_media))
+
+cpu_m2_mais_temperatura_interna_exp
+```
+
+## Semana 1
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m1 %>% 
+  filter(semana_exp == "Semana 1") %>% 
+  ggplot(mapping = aes(y = media_temp, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio_temp, ymax = media_temp + desvio_temp),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  ylim(25, 50) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Temperatura da CPU da máquina 01 por horário do dia (1ª semana)",
+       x = "Horário do dia",
+       y = "Temperatura da CPU (ºC)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m1 %>% 
+  filter(semana_exp == "Semana 1") %>% 
+  ggplot(mapping = aes(y = media_uso, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = pmax(media_uso - desvio_uso, 0), ymax = media_uso + desvio_uso),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  facet_wrap(~dia, ncol = 2) +
+  ylim(0, 100) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Uso da CPU da máquina 01 por horário do dia (1ª semana)",
+       x = "Horário do dia",
+       y = "Uso de CPU (%)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m2 %>% 
+  filter(semana_exp == "Semana 1") %>% 
+  ggplot(mapping = aes(y = media_temp, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio_temp, ymax = media_temp + desvio_temp),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  ylim(25, 50) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Temperatura da CPU da máquina 02 por horário do dia (1ª semana)",
+       x = "Horário do dia",
+       y = "Temperatura da CPU (ºC)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m2 %>% 
+  filter(semana_exp == "Semana 1") %>% 
+  ggplot(mapping = aes(y = media_uso, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = pmax(media_uso - desvio_uso, 0), ymax = media_uso + desvio_uso),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  ylim(0, 100) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Uso da CPU da máquina 02 por horário do dia (1ª semana)",
+       x = "Horário do dia",
+       y = "Uso de CPU (%)")
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.width = 15, fig.height=15}
+dados_liteme_pow_exp_com_data  %>%
+  filter(semana_exp == "Semana 1") %>% 
+  ggplot(aes(x = horario, y = consumo, group = 1)) +
+  facet_wrap(~dia, ncol = 2) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  ylim(0, 3) +
+  labs(title = "Consumo do PowLatec por horário do dia (1ª semana)",
+       y = "Consumo (KWh)",
+       x = "Horário do dia")
+```
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE, fig.width = 10, fig.height = 15}
+sumario_th_latec_exp %>%
+  filter(semana_exp == "Semana 1") %>% 
+  ggplot(mapping = aes(x = horario, y = media_temp)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio, ymax = media_temp + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  ylim(19, 30) +
+  labs(x = "Horário do dia (h)",
+       y = "Temperatura da sala (ºC)",
+       title = "Gráfico da média da temperatura da sala durante os dias da semana (1ª semana)") +
+  facet_wrap(~dia, ncol = 2)
+```
+
+## Semana 2
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m1 %>% 
+  filter(semana_exp == "Semana 2") %>% 
+  ggplot(mapping = aes(y = media_temp, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio_temp, ymax = media_temp + desvio_temp),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  ylim(25, 50) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Temperatura da CPU da máquina 01 por horário do dia (2ª semana)",
+       x = "Horário do dia",
+       y = "Temperatura da CPU (ºC)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m1 %>% 
+  filter(semana_exp == "Semana 2") %>% 
+  ggplot(mapping = aes(y = media_uso, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = pmax(media_uso - desvio_uso, 0), ymax = media_uso + desvio_uso),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  facet_wrap(~dia, ncol = 2) +
+  ylim(0, 100) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Uso da CPU da máquina 01 por horário do dia (2ª semana)",
+       x = "Horário do dia",
+       y = "Uso de CPU (%)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m2 %>% 
+  filter(semana_exp == "Semana 2") %>% 
+  ggplot(mapping = aes(y = media_temp, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio_temp, ymax = media_temp + desvio_temp),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  ylim(25, 50) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Temperatura da CPU da máquina 02 por horário do dia (2ª semana)",
+       x = "Horário do dia",
+       y = "Temperatura da CPU (ºC)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m2 %>% 
+  filter(semana_exp == "Semana 2") %>% 
+  ggplot(mapping = aes(y = media_uso, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = pmax(media_uso - desvio_uso, 0), ymax = media_uso + desvio_uso),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  ylim(0, 100) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Uso da CPU da máquina 02 por horário do dia (2ª semana)",
+       x = "Horário do dia",
+       y = "Uso de CPU (%)")
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.width = 15, fig.height=15}
+dados_liteme_pow_exp_com_data  %>%
+  filter(semana_exp == "Semana 2") %>% 
+  ggplot(aes(x = horario, y = consumo, group = 1)) +
+  facet_wrap(~dia, ncol = 2) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  ylim(0, 3) +
+  labs(title = "Consumo do PowLatec por horário do dia (2ª semana)",
+       y = "Consumo (KWh)",
+       x = "Horário do dia")
+```
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE, fig.width = 10, fig.height = 15}
+sumario_th_latec_exp %>%
+  filter(semana_exp == "Semana 2") %>% 
+  ggplot(mapping = aes(x = horario, y = media_temp)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio, ymax = media_temp + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  ylim(19, 30) +
+  labs(x = "Horário do dia (h)",
+       y = "Temperatura da sala (ºC)",
+       title = "Média da temperatura da sala durante os dias da semana (2ª semana)") +
+  facet_wrap(~dia, ncol = 2)
+```
+
+## Semana 3
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m1 %>% 
+  filter(semana_exp == "Semana 3") %>% 
+  ggplot(mapping = aes(y = media_temp, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio_temp, ymax = media_temp + desvio_temp),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Temperatura da CPU da máquina 01 por horário do dia (3ª semana)",
+       x = "Horário do dia",
+       y = "Temperatura da CPU (ºC)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m1 %>% 
+  filter(semana_exp == "Semana 3") %>% 
+  ggplot(mapping = aes(y = media_uso, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = pmax(media_uso - desvio_uso, 0), ymax = media_uso + desvio_uso),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  facet_wrap(~dia, ncol = 2) +
+  ylim(0, 100) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Uso da CPU da máquina 01 por horário do dia (3ª semana)",
+       x = "Horário do dia",
+       y = "Uso de CPU (%)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m2 %>% 
+  filter(semana_exp == "Semana 3") %>% 
+  ggplot(mapping = aes(y = media_temp, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio_temp, ymax = media_temp + desvio_temp),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Temperatura da CPU da máquina 02 por horário do dia (3ª semana)",
+       x = "Horário do dia",
+       y = "Temperatura da CPU (ºC)")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 15, fig.height=15}
+sumario_m2 %>% 
+  filter(semana_exp == "Semana 3") %>% 
+  ggplot(mapping = aes(y = media_uso, x = horario)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  facet_wrap(~dia, ncol = 2) +
+  geom_errorbar(
+    aes(ymin = pmax(media_uso - desvio_uso, 0), ymax = media_uso + desvio_uso),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  ylim(0, 100) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  labs(title = "Uso da CPU da máquina 02 por horário do dia (3ª semana)",
+       x = "Horário do dia",
+       y = "Uso de CPU (%)")
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.width = 15, fig.height=15}
+dados_liteme_pow_exp_com_data  %>%
+  filter(semana_exp == "Semana 3") %>% 
+  ggplot(aes(x = horario, y = consumo, group = 1)) +
+  facet_wrap(~dia, ncol = 2) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  ylim(0, 3) +
+  labs(title = "Consumo do PowLatec por horário do dia (3ª semana)",
+       y = "Consumo (KWh)",
+       x = "Horário do dia")
+```
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE, fig.width = 10, fig.height = 10}
+sumario_th_latec_exp %>%
+  filter(semana_exp == "Semana 3") %>% 
+  ggplot(mapping = aes(x = horario, y = media_temp)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio, ymax = media_temp + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  scale_x_discrete(limits = c(seq(0, 23))) +
+  ylim(19, 30) +
+  labs(x = "Horário do dia (h)",
+       y = "Temperatura da sala (ºC)",
+       title = "Gráfico da média da temperatura da sala durante os dias da semana (3ª semana)") +
+  facet_wrap(~dia, ncol = 2)
+```
+
+## Temperatura interna por dia durante os experimentos
+
+```{r, echo=FALSE, warning=FALSE,message=FALSE, fig.width=10}
+dados_th_latec_exp_com_data %>%
+  group_by(dia_exp, semana_exp) %>% 
+  summarise(media_temp = mean(temperature, trim = 0.25), desvio = sd_trim(temperature, trim = 0.25, const = TRUE)) %>% 
+  ggplot(mapping = aes(x = dia_exp, y = media_temp, group = 1)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = media_temp - desvio, ymax = media_temp + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  geom_text(aes(
+    label = round(media_temp, digits = 2),
+    vjust = -0.7
+  )) +
+  ylim(19, 28) +
+  labs(x = "Dia da análise",
+       y = "Temperatura da sala (ºC)",
+       title = "Média da temperatura da sala por dia") +
+  facet_wrap(~semana_exp)
+```
+## Consumo total por dia durante os experimentos
+
+```{r, echo=FALSE, warning=FALSE, fig.width = 10}
+sumario_consumo_exp %>%
+  filter(!is.na(semana_exp)) %>% 
+  ggplot(aes(x = dia_exp, y = consumo_total, group = 1)) +
+  geom_bar(
+    stat = "identity",
+    width = .7,
+    lwd = 0.5,
+    fill = "gray87",
+    colour="gray48"
+  ) +
+  geom_text(aes(
+    label = round(consumo_total, digits = 2),
+    vjust = -0.7
+  )) +
+  ylim(0, 50) +
+  labs(title = "Consumo total do PowLatec por dia (3ª semana)",
+       y = "Consumo total (KWh)",
+       x = "Dia da análise") +
+  facet_wrap(~semana_exp)
+```
+
+## Consumo médio por dia durante os experimentos
+
+```{r, echo=FALSE, warning=FALSE, fig.width=10}
+sumario_consumo_exp %>% 
+  filter(!is.na(semana_exp)) %>% 
+  ggplot(mapping = aes(y = media_consumo, x = dia_exp, group = 1)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = media_consumo - desvio, ymax = media_consumo + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  ylim(0.5, 3) +
+  geom_text(aes(
+    label = round(consumo_total, digits = 2),
+    vjust = -0.7
+  )) +
+  labs(title = "Consumo médio do PowLatec por dia",
+       x = "Dia da análise",
+       y = "Consumo médio (KW/h)") +
+  facet_wrap(~semana_exp)
+```
+
+## Correlação entre temperatura interna e consumo
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+consumo_mais_temperatura_interna_exp %>%
+  ggplot(aes(x = consumo, y = temperatura_media)) +
+  geom_point(color = "gray48") +
+  geom_smooth(method = lm, se = FALSE, color = "black") +
+  labs(x = "Consumo do condicionador de ar (kWh)",
+       y = "Temperatura da sala (ºC)",
+       title = "Consumo do condicionador de ar x Temperatura interna")
+```
+
+```{r, echo=FALSE, warning=FALSE}
+consumo_mais_temperatura_interna_exp %>%
+  group_by() %>% 
+  summarise(
+    corr_pearson = cor(consumo, temperatura_media, method = "pearson")
+  )
+```
+
+## Correlação entre temperatura interna e temperatura de CPU das máquinas
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+cpu_m1_mais_temperatura_interna_exp %>%
+  ggplot(aes(x = temperatura_cpu_media, y = temperatura_media)) +
+  geom_point(color = "gray48") +
+  geom_smooth(method = lm, se = FALSE, color = "black") +
+  labs(x = "Temperatura da CPU - máquina 1 (ºC)",
+       y = "Temperatura da sala (ºC)",
+       title = "Temperatura da CPU (máquina 1) x Temperatura interna")
+```
+
+```{r, echo=FALSE, warning=FALSE}
+cpu_m1_mais_temperatura_interna_exp %>%
+  group_by() %>% 
+  summarise(
+    corr_pearson = cor(temperatura_cpu_media, temperatura_media, method = "pearson")
+  )
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+cpu_m2_mais_temperatura_interna_exp %>%
+  ggplot(aes(x = temperatura_cpu_media, y = temperatura_media)) +
+  geom_point(color = "gray48") +
+  geom_smooth(method = lm, se = FALSE, color = "black") +
+  labs(x = "Temperatura da CPU - máquina 2 (ºC)",
+       y = "Temperatura da sala (ºC)",
+       title = "Temperatura da CPU (máquina 2) x Temperatura interna")
+```
+
+```{r, echo=FALSE, warning=FALSE}
+cpu_m2_mais_temperatura_interna_exp %>%
+  group_by() %>% 
+  summarise(
+    corr_pearson = cor(temperatura_cpu_media, temperatura_media, method = "pearson")
+  )
+```
+
+## Correlação entre temperatura externa e consumo durante o experimento
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+consumo_mais_temperatura_exp %>%
+  ggplot(aes(x = consumo, y = temperatura)) +
+  geom_point(color = "gray48") +
+  geom_smooth(method = lm, se = FALSE, color = "black") +
+  labs(x = "Consumo do condicionador de ar (kWh)",
+       y = "Temperatura externa (ºC)",
+       title = "Consumo do condicionador de ar (1ª semana) x Temperatura externa")
+```
+
+```{r, echo=FALSE, warning=FALSE}
+consumo_mais_temperatura_exp %>%
+  group_by() %>% 
+  summarise(corr_pearson = cor(consumo, temperatura, method = 'pearson'))
+```
+
+
+
+
