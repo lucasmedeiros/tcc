@@ -15,7 +15,7 @@ library(chemometrics)
 theme_set(theme_bw())
 ```
 
-## Experimento
+## Exploração
 
 Nesse experimento, temos interesse em discutir e analisar os dados de temperatura e consumo de energia na sala de servidor do Laboratório de Tecnologias de Comunicação (LATEC). Contexto geral pode ser acessado [aqui](https://docs.google.com/document/d/1FHt9EiUNod5aRUt1ybuSwAqq5184zNyDMWIHz3JWLO8/edit?usp=sharing).
 
@@ -103,9 +103,9 @@ Horas -> h (horas)
 
 ## Análise de consumo do ar-condicionado
 
-Abaixo, podemos visualizar a distribuição do consumo de energia do ar-condicionado do LATEC nos meses de Junho a Novembro.
+Abaixo, podemos visualizar a distribuição do consumo de energia do ar-condicionado do LATEC nos meses de Junho a Dezembro
 
-```{r, echo=FALSE, warning=FALSE, fig.width = 10}
+```{r, echo=FALSE, warning=FALSE}
 dados_liteme_pow_com_data = dados_liteme_pow %>%
   filter(potencia_total > 100) %>% 
   mutate(mes = substr(Data, 4, 5), data = dmy(substr(Data, 0, 10)), dia = as.numeric(substr(Data, 0, 2))) %>% 
@@ -123,8 +123,6 @@ dados_liteme_pow_com_data %>%
     fill = "gray87",
     colour="gray48"
   ) +
-  geom_point(color = "gray48", size = 3) +
-  geom_line(color = "gray48") +
   geom_text(aes(
     label = round(consumo_total, digits = 2),
     vjust = -0.7
@@ -144,6 +142,47 @@ dados_liteme_pow_com_data %>%
        y = "Consumo total (KWh)",
        x = "Mês (2021)")
 ```
+
+```{r, echo=FALSE, warning=FALSE}
+dados_liteme_pow_com_data_filtrados %>% 
+  group_by(mes, dia) %>%
+  summarise(consumo_total = sum(potencia_total) / 1000) %>% 
+  group_by(mes) %>% 
+  summarise(media = mean(consumo_total, trim = .25), desvio = sd_trim(consumo_total, trim=.25, const = TRUE)) %>% 
+  ggplot(mapping = aes(x = mes, y = media)) +
+  geom_bar(
+    stat = "identity",
+    width = .7,
+    lwd = 0.5,
+    fill = "gray87",
+    colour="gray48"
+  ) +
+  geom_errorbar(
+    aes(ymin = media - desvio, ymax = media + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  geom_text(aes(
+    label = round(media, digits = 2),
+    vjust = -0.7
+  )) +
+  scale_x_discrete(
+    labels = c(
+      "07" = "Julho",
+      "08" = "Agosto",
+      "09" = "Setembro",
+      "10" = "Outubro",
+      "11" = "Novembro",
+      "12" = "Dezembro"
+    )
+  ) +
+  ylim(0, 50) +
+  labs(title = "Consumo mensal do PowLatec",
+       y = "Consumo total (KWh)",
+       x = "Mês (2021)")
+```
+
 Ao passar dos meses, houve um aumento progressivo de consumo. Se é necessário um resfriamento constante da sala para que não haja superaquecimento dos servidores presentes na sala, ela está sempre fechada e não há trânsito de pessoas, o esperado seria que o consumo se mantivesse constante durante todo o período. Porém, há um aumento considerável e progressivo entre os meses de julho e novembro. Ao decorrer dessa análise, vamos investigar fatores que podem ter ocasionado esse aumento.
 
 Agora, vamos fazer um tratamento nos dados para mostrar o consumo médio por horário do dia, durante o período em que foram coletados os dados.
@@ -337,13 +376,13 @@ Também é possível observar uma maior incidência de valores baixos de média 
 
 Agora, vamos observar a análise de consumo por horário do dia agrupada por mês.
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width = 15}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 dados_consumo_por_horario_mes = dados_liteme_pow_com_data_filtrados %>%
   mutate(horario = as.numeric(sub(":.*", "", substr(Data, 13, 100)))) %>%
   group_by(horario, mes) %>%
   summarise(
     consumo_por_horario = mean((potencia_total) / 1000, trim = 0.25),
-    desvio = sd_trim((potencia_total) / 1000, trim = 0.25),
+    desvio = sd_trim((potencia_total) / 1000, trim = 0.25, const = TRUE),
     .groups = "drop"
   )
 
@@ -357,14 +396,10 @@ dados_consumo_por_horario_mes %>%
     position = position_dodge(.9),
     color = "gray48"
   ) +
-  geom_text(aes(
-    label = round(consumo_por_horario, digits = 2),
-    vjust = -0.7
-  )) +
-  ylim(0.5, 2.5) +
-  scale_x_discrete(limits = c(seq(0, 23))) +
-  facet_wrap(~mes, labeller = as_labeller(meses),ncol = 2) + 
-  labs(title = "Consumo médio (truncado 25%) por horário do dia agrupado por mês",
+  ylim(1, 2.5) +
+  scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
+  facet_wrap(~mes, labeller = as_labeller(meses)) + 
+  labs(title = "Consumo médio por horário do dia agrupado por mês",
        x = "Horário do dia",
        y = "Consumo médio (KW/h)")
 ```
@@ -427,7 +462,7 @@ Agora, vamos fazer uma análise de como se comporta a temperatura interna da sal
 
 Vamos visualizar algumas distribuições de temperatura da **sala do LATEC**, obtidas a partir do resfriamento da sala a partir do ar condicionado.
 
-```{r, echo=FALSE, warning=FALSE, fig.width = 10}
+```{r, echo=FALSE, warning=FALSE}
 dados_th_latec_com_data = dados_th_latec %>%
   mutate(data_hora = format(anytime(timestamp), "%d/%m/%Y, %H:%M:%S")) %>%
   mutate(mes = substr(data_hora, 4, 5), dia = as.numeric(substr(data_hora, 0, 2)))
@@ -469,7 +504,7 @@ dados_th_latec_com_data %>%
   labs(title = "Temperatura média da sala do LATEC",
        y = "Temperatura (ºC)",
        x = "Mês (2021)") +
-  ylim(0, 40)
+  ylim(0, 25)
 ```
 
 A temperatura média interna da sala, de acordo com os dados obtidos em dezembro, se manteve estável durante os meses, e é possível observar uma variação um pouco maior em Julho, em que alguns dias o condicionador de ar esteve com temperatura de 16 graus, e em um dado momento foi elevado para 21ºC.
@@ -509,7 +544,7 @@ A partir das duas visualizações acima, da temperatura média da sala em três 
 
 A fim de tentar identificar quando acontecem essas grandes variações, vamos fazer análises agrupadas por meses da temperatura interna da sala.
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width = 15}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 dados_th_latec_com_data %>%
   group_by(mes, dia) %>%
   filter(!is.na(temperature)) %>% 
@@ -531,10 +566,10 @@ dados_th_latec_com_data %>%
   ) +
   labs(title = "Temperatura média da sala do LATEC",
        y = "Temperatura (ºC)",
-       x = "Mês (2021)") +
-  facet_wrap(~mes, labeller = as_labeller(meses),ncol = 2) + 
-  ylim(10, 30) +
-  scale_x_discrete(limits = c(seq(1, 31)))
+       x = "Dia") +
+  facet_wrap(~mes, labeller = as_labeller(meses), ncol = 2) + 
+  ylim(15, 30) +
+  scale_x_discrete(limits = c(seq(1, 31, 2)))
 ```
 
 Como é possível analisar nos gráficos acima, notamos que a partir de agosto, a média da sala se mantém equilibrada, mas alguns dias têm desvios padrão bem mais elevados que outros, além de que Julho foi o que apresentou maior variação na média da temperatura interna dentre os meses analisados, enquanto que nos demais a média de temperatura se manteve estável.
@@ -572,7 +607,7 @@ dados_temperatura_por_horario_mes %>%
 
 Agora, vamos fazer uma análise sobre a temperatura de Campina Grande, a fim de identificar uma possível relação com consumo. Primeiramente, vamos visualizar a média de temperatura por mês de Campina Grande durante o período em que os dados obtidos pelo INMET foram coletados:
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE,fig.width = 10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 dados_temperatura_cg_data = dados_th_cg %>% 
   mutate(
     hora = as.numeric(substr(hora_utc, 0, 2)),
@@ -601,7 +636,7 @@ dados_temperatura_cg_data %>%
   ) +
   geom_text(aes(
     label = round(temperatura_media, digits = 2),
-    vjust = 2
+    vjust = 1.5
   )) +
   scale_x_discrete(
     labels = c(
@@ -614,10 +649,10 @@ dados_temperatura_cg_data %>%
       "12" = "Dezembro"
     )
   ) +
-  labs(title = "Temperatura média de CG por mês",
+  labs(title = "Temperatura média de Campina Grande por mês",
        y = "Temperatura (ºC)",
        x = "Mês (2021)") +
-  ylim(0, 40)
+  ylim(0, 30)
 
 ```
 
@@ -684,7 +719,7 @@ dados_temperatura_cg_data %>%
 
 ```
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=15}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 dados_temperatura_cg_horario_mes = dados_temperatura_cg_data %>%
   group_by(hora, mes) %>%
   summarise(media_temp_cg_horario = mean(temperatura),
@@ -692,7 +727,7 @@ dados_temperatura_cg_horario_mes = dados_temperatura_cg_data %>%
 
 dados_temperatura_cg_horario_mes %>%
   ggplot(mapping = aes(x = hora, y = media_temp_cg_horario)) +
-  scale_x_discrete(limits = c(seq(0, 23))) +
+  scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
   geom_point(color = "gray48")  +
   geom_line(color = "gray48") +
   geom_errorbar(
@@ -701,14 +736,10 @@ dados_temperatura_cg_horario_mes %>%
     position = position_dodge(.9),
     color = "gray48"
   ) +
-  geom_text(aes(
-    label = round(media_temp_cg_horario, digits = 1),
-    vjust = -0.7
-  )) +
-  facet_wrap(~mes, labeller = as_labeller(meses),ncol = 2) + 
+  facet_wrap(~mes, labeller = as_labeller(meses)) + 
   labs(x = "Horário do dia (h)",
        y = "Temperatura (ºC)",
-       title = "Gráfico da média da temperatura de CG por horário do dia")
+       title = "Média da temperatura de Campina Grande por horário do dia agrupado por mês")
 ```
 
 ## Correlação entre temperatura externa e consumo
@@ -752,7 +783,7 @@ consumo_mais_temperatura_total %>%
   geom_smooth(method = lm, se = FALSE, color = "black") +
   labs(x = "Consumo (kWh)",
        y = "Temperatura (ºC)",
-       title = "Dispersão do consumo do ar condicionado x temperatura de CG")
+       title = "Consumo do ar condicionado x temperatura de Campina Grande")
 ```
 
 ```{r, echo=FALSE, warning=FALSE}
@@ -762,14 +793,14 @@ consumo_mais_temperatura_total %>% group_by() %>%
 
 Neste primeiro gráfico de dispersão, obtivemos um resultado diferente do que esperávamos. Uma dispersão um pouco maior do que imaginamos, com coeficiente de correlação de aproximadamente **0.74**, que indica que **existe uma correlação, mas moderada**. Porém, muitos dados estão concentrados em regiões específicas (que pode significar um problema na obtenção dos dados). Alguns pontos que indicam consumo zero podem ser de dados do mês de julho, que apresentou dispersões maiores que o restante dos meses. Para tentar identificar esses casos suspeitos, vamos fazer uma dispersão de meses separadamente:
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 consumo_mais_temperatura_total %>%
   ggplot(aes(x = consumo, y = temperatura)) +
   geom_point(color = "gray48", size=0.8) +
   geom_smooth(method = lm, se = FALSE, color = "black") +
   labs(x = "Consumo (kWh)",
        y = "Temperatura (ºC)",
-       title = "Dispersão do consumo do ar condicionado x temperatura de CG agrupado por mês") +
+       title = "Consumo do ar condicionado x temperatura de Campina Grande por mês") +
   facet_wrap(~mes, labeller = as_labeller(meses))
 ```
 
