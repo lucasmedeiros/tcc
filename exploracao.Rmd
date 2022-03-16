@@ -143,46 +143,6 @@ dados_liteme_pow_com_data %>%
        x = "Mês (2021)")
 ```
 
-```{r, echo=FALSE, warning=FALSE}
-dados_liteme_pow_com_data_filtrados %>% 
-  group_by(mes, dia) %>%
-  summarise(consumo_total = sum(potencia_total) / 1000) %>% 
-  group_by(mes) %>% 
-  summarise(media = mean(consumo_total, trim = .25), desvio = sd_trim(consumo_total, trim=.25, const = TRUE)) %>% 
-  ggplot(mapping = aes(x = mes, y = media)) +
-  geom_bar(
-    stat = "identity",
-    width = .7,
-    lwd = 0.5,
-    fill = "gray87",
-    colour="gray48"
-  ) +
-  geom_errorbar(
-    aes(ymin = media - desvio, ymax = media + desvio),
-    width = .2,
-    position = position_dodge(.9),
-    color = "gray48"
-  ) +
-  geom_text(aes(
-    label = round(media, digits = 2),
-    vjust = -0.7
-  )) +
-  scale_x_discrete(
-    labels = c(
-      "07" = "Julho",
-      "08" = "Agosto",
-      "09" = "Setembro",
-      "10" = "Outubro",
-      "11" = "Novembro",
-      "12" = "Dezembro"
-    )
-  ) +
-  ylim(0, 50) +
-  labs(title = "Consumo mensal do PowLatec",
-       y = "Consumo total (KWh)",
-       x = "Mês (2021)")
-```
-
 Ao passar dos meses, houve um aumento progressivo de consumo. Se é necessário um resfriamento constante da sala para que não haja superaquecimento dos servidores presentes na sala, ela está sempre fechada e não há trânsito de pessoas, o esperado seria que o consumo se mantivesse constante durante todo o período. Porém, há um aumento considerável e progressivo entre os meses de julho e novembro. Ao decorrer dessa análise, vamos investigar fatores que podem ter ocasionado esse aumento.
 
 Agora, vamos fazer um tratamento nos dados para mostrar o consumo médio por horário do dia, durante o período em que foram coletados os dados.
@@ -406,7 +366,7 @@ dados_consumo_por_horario_mes %>%
 
 Como esperado, os dados do mês de julho tiveram mais uma vez a maior variação de desvio padrão, observada no intervalo de confiança de seu gráfico. Nos demais meses, variações muito grandes no dp ocorrem esporadicamente.
 
-Por fim, vamos visualizar a distribuição de média de consumo por dia da semana, também agrupada por mês.
+Agora, vamos visualizar a distribuição de média de consumo por dia da semana, também agrupada por mês.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width = 15}
 dados_liteme_pow_com_data_filtrados %>%
@@ -455,6 +415,96 @@ dados_liteme_pow_com_data_filtrados %>%
        x = "Dia da semana",
        y = "Consumo médio (KW/h)")
 ```
+
+Por fim, uma análise do consumo médio por dia dos meses em que foi feita a análise:
+
+```{r, echo=FALSE, warning=FALSE}
+dados_liteme_pow_com_data_filtrados %>% 
+  group_by(mes, dia) %>%
+  summarise(consumo_total = sum(potencia_total) / 1000) %>% 
+  group_by(mes) %>% 
+  summarise(media = mean(consumo_total, trim = .25), desvio = sd_trim(consumo_total, trim=.25, const = TRUE)) %>% 
+  ggplot(mapping = aes(x = mes, y = media)) +
+  geom_bar(
+    stat = "identity",
+    width = .7,
+    lwd = 0.5,
+    fill = "gray87",
+    colour="gray48"
+  ) +
+  geom_errorbar(
+    aes(ymin = media - desvio, ymax = media + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  geom_text(aes(
+    label = round(media, digits = 2),
+    vjust = -0.7
+  )) +
+  scale_x_discrete(
+    labels = c(
+      "07" = "Julho",
+      "08" = "Agosto",
+      "09" = "Setembro",
+      "10" = "Outubro",
+      "11" = "Novembro",
+      "12" = "Dezembro"
+    )
+  ) +
+  ylim(0, 50) +
+  labs(title = "Média do consumo diário do PowLatec",
+       y = "Média do consumo total dos dias do mês (KWh)",
+       x = "Mês (2021)")
+```
+
+```{r, echo=FALSE, warning=FALSE}
+dados_liteme_pow_com_data_filtrados %>%
+  mutate(
+    horario = as.numeric(sub(":.*", "", substr(Data, 13, 100))),
+    tipo_horario = case_when(
+      horario < 6 ~ "Madrugada",
+      horario < 12 ~ "Manhã",
+      horario < 18 ~ "Tarde",
+      horario <= 23 ~ "Noite"
+    )
+  )%>%
+  group_by(tipo_horario, mes) %>% 
+  summarise(
+    consumo_total = sum(potencia_total) / 1000,
+    media_consumo = mean(potencia_total / 1000, trim=0.25),
+    desvio = sd_trim(potencia_total / 1000, trim = 0.25, const = TRUE)
+  ) %>% 
+  ggplot(mapping = aes(y = media_consumo, x = mes, group = 1)) +
+  geom_point(color = "gray48") +
+  geom_line(color = "gray48") +
+  geom_errorbar(
+    aes(ymin = media_consumo - desvio, ymax = media_consumo + desvio),
+    width = .2,
+    position = position_dodge(.9),
+    color = "gray48"
+  ) +
+  geom_text(aes(
+    label = round(media_consumo, digits = 2),
+    vjust = -0.7
+  )) +
+  scale_x_discrete(
+    labels = c(
+      "07" = "Jul",
+      "08" = "Ago",
+      "09" = "Set",
+      "10" = "Out",
+      "11" = "Nov",
+      "12" = "Dez"
+    )
+  ) +
+  ylim(1, 2.5) +
+  labs(title = "Consumo médio do PowLatec por mês agrupado por fase do dia",
+       x = "Mês da análise",
+       y = "Consumo médio (KW/h)") +
+  facet_wrap(~tipo_horario, ncol = 2)
+```
+
 
 ## Análise de temperatura interna
 

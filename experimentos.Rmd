@@ -362,12 +362,12 @@ cpu_m2_mais_temperatura_interna_exp
 
 ## Análises da máquina 01
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10, fig.height=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 sumario_m1 %>% 
   filter(!is.na(dia_exp)) %>% 
   ggplot(mapping = aes(y = media_temp, x = horario, colour = factor(semana_exp))) +
-  geom_point() +
-  geom_line() +
+  geom_point(size=.6) +
+  geom_line(size=.3) +
   facet_wrap(~dia_exp, ncol = 2) +
   ylim(25, 80) +
   scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
@@ -377,12 +377,12 @@ sumario_m1 %>%
        colour = "Legenda")
 ```
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10, fig.height=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 sumario_m1 %>%
   filter(!is.na(dia_exp)) %>% 
   ggplot(mapping = aes(y = media_uso, x = horario, colour = factor(semana_exp))) +
-  geom_point() +
-  geom_line() +
+  geom_point(size=.6) +
+  geom_line(size=.3) +
   facet_wrap(~dia_exp, ncol = 2) +
   ylim(0, 100) +
   scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
@@ -394,12 +394,12 @@ sumario_m1 %>%
 
 ## Análises da máquina 02
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10, fig.height=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 sumario_m2 %>% 
   filter(!is.na(dia_exp)) %>% 
   ggplot(mapping = aes(y = media_temp, x = horario, colour = factor(semana_exp))) +
-  geom_point() +
-  geom_line() +
+  geom_point(size=.6) +
+  geom_line(size=.3) +
   facet_wrap(~dia_exp, ncol = 2) +
   ylim(25, 100) +
   scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
@@ -409,12 +409,12 @@ sumario_m2 %>%
        colour = "Legenda")
 ```
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width = 10, fig.height=10}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 sumario_m2 %>%
   filter(!is.na(dia_exp)) %>% 
   ggplot(mapping = aes(y = media_uso, x = horario, colour = factor(semana_exp))) +
-  geom_point() +
-  geom_line() +
+  geom_point(size=.6) +
+  geom_line(size=.3) +
   facet_wrap(~dia_exp, ncol = 2) +
   ylim(0, 100) +
   scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
@@ -517,7 +517,7 @@ sumario_consumo_exp_horario %>%
     label = round(media_consumo, digits = 2),
     vjust = -0.7
   )) +
-  ylim(0, 5) +
+  ylim(1, 2.5) +
   labs(title = "Consumo médio do PowLatec por semana agrupado por fase do dia",
        x = "Dia da análise",
        y = "Consumo médio (KW/h)") +
