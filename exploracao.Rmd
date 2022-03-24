@@ -338,20 +338,20 @@ Agora, vamos observar a análise de consumo por horário do dia agrupada por mê
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 dados_consumo_por_horario_mes = dados_liteme_pow_com_data_filtrados %>%
-  mutate(horario = as.numeric(sub(":.*", "", substr(Data, 13, 100)))) %>%
-  group_by(horario, mes) %>%
+  mutate(hora = as.numeric(sub(":.*", "", substr(Data, 13, 100)))) %>%
+  group_by(hora, mes) %>%
   summarise(
     consumo_por_horario = mean((potencia_total) / 1000, trim = 0.25),
-    desvio = sd_trim((potencia_total) / 1000, trim = 0.25, const = TRUE),
+    desvio_consumo = sd_trim((potencia_total) / 1000, trim = 0.25, const = TRUE),
     .groups = "drop"
   )
 
 dados_consumo_por_horario_mes %>%
-  ggplot(mapping = aes(y = consumo_por_horario, x = horario)) +
+  ggplot(mapping = aes(y = consumo_por_horario, x = hora)) +
   geom_point(color = "gray48") +
   geom_line(color = "gray48") +
   geom_errorbar(
-    aes(ymin = consumo_por_horario - desvio, ymax = consumo_por_horario + desvio),
+    aes(ymin = consumo_por_horario - desvio_consumo, ymax = consumo_por_horario + desvio_consumo),
     width = .2,
     position = position_dodge(.9),
     color = "gray48"
@@ -773,7 +773,7 @@ dados_temperatura_cg_data %>%
 dados_temperatura_cg_horario_mes = dados_temperatura_cg_data %>%
   group_by(hora, mes) %>%
   summarise(media_temp_cg_horario = mean(temperatura),
-            desvio = sd(temperatura))
+            desvio_temperatura = sd(temperatura))
 
 dados_temperatura_cg_horario_mes %>%
   ggplot(mapping = aes(x = hora, y = media_temp_cg_horario)) +
@@ -781,7 +781,7 @@ dados_temperatura_cg_horario_mes %>%
   geom_point(color = "gray48")  +
   geom_line(color = "gray48") +
   geom_errorbar(
-    aes(ymin = media_temp_cg_horario - desvio, ymax = media_temp_cg_horario + desvio),
+    aes(ymin = media_temp_cg_horario - desvio_temperatura, ymax = media_temp_cg_horario + desvio_temperatura),
     width = .2,
     position = position_dodge(.9),
     color = "gray48"
@@ -790,6 +790,62 @@ dados_temperatura_cg_horario_mes %>%
   labs(x = "Horário do dia (h)",
        y = "Temperatura (ºC)",
        title = "Média da temperatura de Campina Grande por horário do dia agrupado por mês")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+FACTOR = 15
+colors <- c("Temperatura externa" = "goldenrod3", "Consumo" = "firebrick")
+
+info_por_horario_mes = full_join(
+  dados_temperatura_cg_horario_mes,
+  dados_consumo_por_horario_mes,
+  by = c("hora", "mes")
+)
+
+ggplot(info_por_horario_mes) +
+  geom_line(mapping = aes(y = media_temp_cg_horario, x = hora, color = "Temperatura externa")) +
+  geom_point(mapping = aes(y = media_temp_cg_horario, x = hora, color = "Temperatura externa"), size=.8) +
+  geom_errorbar(
+    aes(
+      y = media_temp_cg_horario,
+      x = hora,
+      ymin = media_temp_cg_horario - desvio_temperatura,
+      ymax = media_temp_cg_horario + desvio_temperatura,
+      color = "Temperatura externa"
+    ),
+    width = .2,
+    position = position_dodge(.9)
+  ) +
+  geom_line(mapping = aes(y = consumo_por_horario * FACTOR, x = hora, color = "Consumo")) +
+  geom_point(mapping = aes(y = consumo_por_horario * FACTOR, x = hora, color = "Consumo"), size=.8) +
+  geom_errorbar(
+    aes(
+      y = consumo_por_horario * FACTOR,
+      x = hora,
+      ymin = (consumo_por_horario * FACTOR) - (desvio_consumo * FACTOR),
+      ymax = (consumo_por_horario * FACTOR) + (desvio_consumo * FACTOR),
+      color = "Consumo"
+    ),
+    width = .2,
+    position = position_dodge(.9)
+  ) +
+  geom_hline(yintercept=2 * FACTOR, linetype="dashed", color = "gray48") +
+  geom_hline(yintercept=20, linetype="dashed", color = "gray48") +
+  scale_y_continuous("Temperatura externa (ºC)", sec.axis = sec_axis(~ . / FACTOR, name = "Consumo do condicionador de ar (kWh)")) +
+  scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
+  facet_wrap(~mes, labeller = as_labeller(meses)) + 
+  labs(
+    x = "Horário do dia (h)",
+    title = "Temperatura e consumo médios por horário do dia agrupados por mês",
+    color = ""
+  ) +
+  scale_color_manual(values = colors) +
+  theme(
+    legend.position="bottom",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank()
+  )
 ```
 
 ## Correlação entre temperatura externa e consumo
@@ -850,7 +906,7 @@ consumo_mais_temperatura_total %>%
   geom_smooth(method = lm, se = FALSE, color = "black") +
   labs(x = "Consumo (kWh)",
        y = "Temperatura (ºC)",
-       title = "Consumo do ar condicionado x temperatura de Campina Grande por mês") +
+       title = "Consumo do condicionador de ar x temperatura de Campina Grande por mês") +
   facet_wrap(~mes, labeller = as_labeller(meses))
 ```
 

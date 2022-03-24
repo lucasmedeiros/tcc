@@ -146,7 +146,7 @@ sumario_consumo_exp = dados_liteme_pow_exp_com_data %>%
   summarise(
     consumo_total = sum(potencia_total) / 1000,
     media_consumo = mean(potencia_total / 1000, trim=0.25),
-    desvio = sd_trim(potencia_total / 1000, trim = 0.25, const = TRUE)
+    desvio_consumo = sd_trim(potencia_total / 1000, trim = 0.25, const = TRUE)
   ) %>% 
   mutate(
     semana_exp = case_when(
@@ -196,12 +196,12 @@ sumario_consumo_exp_horario = dados_liteme_pow_exp_com_data %>%
       horario <= 23 ~ "Noite"
     )
   ) %>% 
-  group_by(tipo_horario, semana_exp) %>% 
+  group_by(horario, semana_exp) %>% 
   summarise(
     consumo_total = sum(potencia_total) / 1000,
     media_consumo = mean(potencia_total / 1000, trim=0.25),
     desvio = sd_trim(potencia_total / 1000, trim = 0.25, const = TRUE)
-  )
+  ) %>% filter(!is.na(semana_exp))
 
 sumario_consumo_exp_horario
 ```
@@ -268,6 +268,17 @@ sumario_th_latec_exp = dados_th_latec_exp_com_data %>%
   )
 
 sumario_th_latec_exp
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+sumario_th_latec_exp_horario = sumario_th_latec_exp %>% 
+  group_by(horario, semana_exp) %>% 
+  summarise(
+    media_temperatura = mean(media_temp),
+    desvio_temperatura = sd(media_temp)
+  ) %>% filter(!is.na(semana_exp))
+
+sumario_th_latec_exp_horario
 ```
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
@@ -427,14 +438,17 @@ sumario_m2 %>%
 ## Temperatura interna por dia durante os experimentos
 
 ```{r, echo=FALSE, warning=FALSE,message=FALSE, fig.width=10}
+sumario_temperatura_exp = 
 dados_th_latec_exp_com_data %>%
   group_by(dia_exp, semana_exp) %>% 
-  summarise(media_temp = mean(temperature, trim = 0.25), desvio = sd_trim(temperature, trim = 0.25, const = TRUE)) %>% 
+  summarise(media_temp = mean(temperature, trim = 0.25), desvio_temperatura = sd_trim(temperature, trim = 0.25, const = TRUE))
+
+sumario_temperatura_exp %>% 
   ggplot(mapping = aes(x = dia_exp, y = media_temp, group = 1)) +
   geom_point(color = "gray48") +
   geom_line(color = "gray48") +
   geom_errorbar(
-    aes(ymin = media_temp - desvio, ymax = media_temp + desvio),
+    aes(ymin = media_temp - desvio_temperatura, ymax = media_temp + desvio_temperatura),
     width = .2,
     position = position_dodge(.9),
     color = "gray48"
@@ -483,7 +497,7 @@ sumario_consumo_exp %>%
   geom_point(color = "gray48") +
   geom_line(color = "gray48") +
   geom_errorbar(
-    aes(ymin = media_consumo - desvio, ymax = media_consumo + desvio),
+    aes(ymin = media_consumo - desvio_consumo, ymax = media_consumo + desvio_consumo),
     width = .2,
     position = position_dodge(.9),
     color = "gray48"
@@ -501,27 +515,52 @@ sumario_consumo_exp %>%
 
 ## Consumo médio por dia por horário
 
-```{r, echo=FALSE, warning=FALSE}
-sumario_consumo_exp_horario %>% 
-  filter(!is.na(semana_exp)) %>% 
-  ggplot(mapping = aes(y = media_consumo, x = semana_exp, group = 1)) +
-  geom_point(color = "gray48") +
-  geom_line(color = "gray48") +
+```{r, echo=FALSE, warning=FALSE, fig.width=8}
+FACTOR = 10
+colors <- c("Temperatura interna" = "dodgerblue1", "Consumo" = "firebrick")
+
+info_exp_horario = full_join(
+  sumario_th_latec_exp_horario,
+  sumario_consumo_exp_horario,
+  by = c("horario", "semana_exp")
+)
+
+ggplot(info_exp_horario) +
+  geom_hline(yintercept=25, linetype="dashed", color = "gray75") +
+  geom_hline(yintercept=20, linetype="dashed", color = "gray75") +
+  geom_hline(yintercept=15, linetype="dashed", color = "gray75") +
+  geom_hline(yintercept=10, linetype="dashed", color = "gray75") +
+  
+  geom_line(mapping = aes(y = media_temperatura, x = horario, color = "Temperatura interna")) +
+  geom_point(mapping = aes(y = media_temperatura, x = horario, color = "Temperatura interna"), size=.7) +
+  geom_line(mapping = aes(y = media_consumo * FACTOR, x = horario, color = "Consumo")) +
+  geom_point(mapping = aes(y = media_consumo * FACTOR, x = horario, color = "Consumo"), size=.7) +
   geom_errorbar(
-    aes(ymin = media_consumo - desvio, ymax = media_consumo + desvio),
+    aes(
+      y = media_consumo * FACTOR,
+      x = horario,
+      ymin = (media_consumo * FACTOR) - (desvio * FACTOR),
+      ymax = (media_consumo * FACTOR) + (desvio * FACTOR),
+      color = "Consumo"
+    ),
     width = .2,
-    position = position_dodge(.9),
-    color = "gray48"
+    position = position_dodge(.9)
   ) +
-  geom_text(aes(
-    label = round(media_consumo, digits = 2),
-    vjust = -0.7
-  )) +
-  ylim(1, 2.5) +
-  labs(title = "Consumo médio do PowLatec por semana agrupado por fase do dia",
-       x = "Dia da análise",
-       y = "Consumo médio (KW/h)") +
-  facet_wrap(~tipo_horario, ncol = 2)
+  scale_y_continuous("Temperatura (ºC)", sec.axis = sec_axis(~ . / FACTOR, name = "Consumo (kWh)")) +
+  scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
+  facet_wrap(~semana_exp) + 
+  labs(
+    x = "Horário do dia (h)",
+    title = "Temperatura interna e consumo por horário agrupados por semana de experimetno",
+    color = ""
+  ) +
+  scale_color_manual(values = colors) +
+  theme(
+    legend.position="bottom",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank()
+  )
 ```
 
 ## Correlação entre temperatura interna e consumo
@@ -592,7 +631,7 @@ consumo_mais_temperatura_exp %>%
   geom_smooth(method = lm, se = FALSE, color = "black") +
   labs(x = "Consumo do condicionador de ar (kWh)",
        y = "Temperatura externa (ºC)",
-       title = "Consumo do condicionador de ar (1ª semana) x Temperatura externa")
+       title = "Consumo do condicionador de ar x Temperatura externa (1ª semana)")
 ```
 
 ```{r, echo=FALSE, warning=FALSE}
