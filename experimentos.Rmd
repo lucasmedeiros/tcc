@@ -255,17 +255,8 @@ temperatura_fevereiro_2022
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
 sumario_th_latec_exp = dados_th_latec_exp_com_data %>%
-  group_by(dia, horario, tipo_horario) %>% 
-  summarise(media_temp = mean(temperature), desvio = sd(temperature)) %>% 
-  mutate(
-    semana_exp = case_when(
-      dia == "07/02/2022" | dia == "08/02/2022" | dia == "09/02/2022" | dia == "10/02/2022" | dia == "11/02/2022" | dia == "12/02/2022" | dia == "13/02/2022" ~ "Semana 1",
-      dia == "14/02/2022" | dia == "15/02/2022" | dia == "16/02/2022" | dia == "17/02/2022" | dia == "18/02/2022" | dia == "19/02/2022" | dia == "20/02/2022" ~ "Semana 2",
-      dia == "21/02/2022" | dia == "22/02/2022" | dia == "23/02/2022" | dia == "24/02/2022" | dia == "25/02/2022" | dia == "26/02/2022" | dia == "27/02/2022" ~ "Semana 3",
-      dia == "28/02/2022" | dia == "01/03/2022" | dia == "02/03/2022" | dia == "03/03/2022" | dia == "04/03/2022" | dia == "05/03/2022" | dia == "06/03/2022" ~ "Semana 4",
-      dia == "07/03/2022" | dia == "08/03/2022" | dia == "09/03/2022" | dia == "10/03/2022" | dia == "11/03/2022" | dia == "12/03/2022" | dia == "13/03/2022" ~ "Semana 5"
-    )
-  )
+  group_by(dia_exp, horario, semana_exp) %>% 
+  summarise(media_temp_interna = mean(temperature), desvio_temp_interna = sd(temperature))
 
 sumario_th_latec_exp
 ```
@@ -274,8 +265,8 @@ sumario_th_latec_exp
 sumario_th_latec_exp_horario = sumario_th_latec_exp %>% 
   group_by(horario, semana_exp) %>% 
   summarise(
-    media_temperatura = mean(media_temp),
-    desvio_temperatura = sd(media_temp)
+    media_temperatura = mean(media_temp_interna),
+    desvio_temperatura = sd(media_temp_interna)
   ) %>% filter(!is.na(semana_exp))
 
 sumario_th_latec_exp_horario
@@ -371,68 +362,48 @@ cpu_m2_mais_temperatura_interna_exp = full_join(dados_th_latec_exp_formatados,
 cpu_m2_mais_temperatura_interna_exp
 ```
 
-## Análises da máquina 01
+## Análises das máquinas da sala
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-sumario_m1 %>% 
-  filter(!is.na(dia_exp)) %>% 
-  ggplot(mapping = aes(y = media_temp, x = horario, colour = factor(semana_exp))) +
-  geom_point(size=.6) +
-  geom_line(size=.3) +
-  facet_wrap(~dia_exp, ncol = 2) +
-  ylim(25, 80) +
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+colors_maquinas <- c("Temperatura CPU (ºC)" = "goldenrod1", "Temperatura Interna (ºC)" = "dodgerblue1", "Uso de CPU (%)" = "firebrick")
+
+ggplot(sumario_m1 %>%  filter(!is.na(dia_exp))) +
+  geom_line(size=.8, data=sumario_th_latec_exp, mapping = aes(y = media_temp_interna, x = horario, color="Temperatura Interna (ºC)")) +
+  geom_line(size=.8, mapping = aes(y = media_temp, x = horario, color="Temperatura CPU (ºC)")) +
+  geom_line(size=.8, mapping = aes(y = media_uso, x = horario, color="Uso de CPU (%)")) +
+  facet_grid(semana_exp ~ dia_exp) +
+  ylim(0, 75) +
   scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
-  labs(title = "Temperatura média da CPU da máquina 01 por horário do dia",
-       x = "Horário do dia",
-       y = "Temperatura da CPU (ºC)",
-       colour = "Legenda")
+  labs(
+    title = "Temperatura média e utilização da CPU da máquina 1 por horário do dia",
+    x = "Horário do dia (h)",
+    y = "Utilização de CPU (%) / Temperatura ºC",
+    color="Legenda"
+  ) +
+  scale_color_manual(values = colors_maquinas) +
+  theme(
+    legend.position = "bottom"
+  )
 ```
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-sumario_m1 %>%
-  filter(!is.na(dia_exp)) %>% 
-  ggplot(mapping = aes(y = media_uso, x = horario, colour = factor(semana_exp))) +
-  geom_point(size=.6) +
-  geom_line(size=.3) +
-  facet_wrap(~dia_exp, ncol = 2) +
-  ylim(0, 100) +
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10}
+ggplot(sumario_m2 %>%  filter(!is.na(dia_exp))) +
+  geom_line(size=.8, data=sumario_th_latec_exp, mapping = aes(y = media_temp_interna, x = horario, color="Temperatura Interna (ºC)")) +
+  geom_line(size=.8, mapping = aes(y = media_temp, x = horario, color="Temperatura CPU (ºC)")) +
+  geom_line(size=.8, mapping = aes(y = media_uso, x = horario, color="Uso de CPU (%)")) +
+  facet_grid(semana_exp ~ dia_exp) +
+  ylim(0, 80) +
   scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
-  labs(title = "Utilização média de CPU da máquina 01 por horário do dia",
-       x = "Horário do dia",
-       y = "Uso de CPU (%)",
-       colour = "Legenda")
-```
-
-## Análises da máquina 02
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-sumario_m2 %>% 
-  filter(!is.na(dia_exp)) %>% 
-  ggplot(mapping = aes(y = media_temp, x = horario, colour = factor(semana_exp))) +
-  geom_point(size=.6) +
-  geom_line(size=.3) +
-  facet_wrap(~dia_exp, ncol = 2) +
-  ylim(25, 100) +
-  scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
-  labs(title = "Temperatura média da CPU da máquina 02 por horário do dia",
-       x = "Horário do dia",
-       y = "Temperatura da CPU (ºC)",
-       colour = "Legenda")
-```
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-sumario_m2 %>%
-  filter(!is.na(dia_exp)) %>% 
-  ggplot(mapping = aes(y = media_uso, x = horario, colour = factor(semana_exp))) +
-  geom_point(size=.6) +
-  geom_line(size=.3) +
-  facet_wrap(~dia_exp, ncol = 2) +
-  ylim(0, 100) +
-  scale_x_discrete(limits = c(0, 6, 12, 18, 23)) +
-  labs(title = "Utilização média de CPU da máquina 02 por horário do dia",
-       x = "Horário do dia",
-       y = "Uso de CPU (%)",
-       colour = "Legenda")
+  labs(
+    title = "Temperatura média e utilização da CPU da máquina 2 por horário do dia",
+    x = "Horário do dia (h)",
+    y = "Utilização de CPU (%) / Temperatura da CPU ºC",
+    color = "Legenda"
+  ) +
+  scale_color_manual(values = colors_maquinas) +
+  theme(
+    legend.position = "bottom"
+  )
 ```
 
 ## Temperatura interna por dia durante os experimentos
@@ -526,10 +497,10 @@ info_exp_horario = full_join(
 )
 
 ggplot(info_exp_horario) +
-  geom_hline(yintercept=25, linetype="dashed", color = "gray75") +
-  geom_hline(yintercept=20, linetype="dashed", color = "gray75") +
-  geom_hline(yintercept=15, linetype="dashed", color = "gray75") +
-  geom_hline(yintercept=10, linetype="dashed", color = "gray75") +
+  geom_hline(yintercept=25, linetype="dashed", color = "gray48") +
+  geom_hline(yintercept=20, linetype="dashed", color = "gray48") +
+  geom_hline(yintercept=15, linetype="dashed", color = "gray48") +
+  geom_hline(yintercept=10, linetype="dashed", color = "gray48") +
   
   geom_line(mapping = aes(y = media_temperatura, x = horario, color = "Temperatura interna")) +
   geom_point(mapping = aes(y = media_temperatura, x = horario, color = "Temperatura interna"), size=.7) +
